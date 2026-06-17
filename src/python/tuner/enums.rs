@@ -4,7 +4,7 @@
 //! - TuningMode: Optimistic vs Realistic evaluation
 //! - OptimizationMetric: What metric to optimize
 //! - TaskType: Regression, Binary, Multi-class
-//! - ModelFormat: Rkyv vs Bincode serialization
+//! - ModelFormat: Rkyv serialization
 //! - GridStrategy: Cartesian, LHS, Random sampling
 //! - EvalStrategy: Holdout or Conformal evaluation
 
@@ -236,7 +236,6 @@ impl From<TaskType> for PyTaskType {
 /// Determines how the best model is saved after tuning.
 ///
 /// - Rkyv: Zero-copy deserialization, fastest loading
-/// - Bincode: Compact binary, serde-based
 #[pyclass(from_py_object, name = "ModelFormat", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyModelFormat {
@@ -256,17 +255,6 @@ impl PyModelFormat {
         }
     }
 
-    /// Bincode format - compact binary serialization
-    ///
-    /// Good balance of size and compatibility.
-    /// File extension: .bin
-    #[staticmethod]
-    fn bincode() -> Self {
-        Self {
-            inner: ModelFormat::Bincode,
-        }
-    }
-
     /// Get the file extension for this format
     #[getter]
     fn extension(&self) -> &'static str {
@@ -282,7 +270,6 @@ impl PyModelFormat {
     fn __repr__(&self) -> &'static str {
         match self.inner {
             ModelFormat::Rkyv => "ModelFormat.rkyv()",
-            ModelFormat::Bincode => "ModelFormat.bincode()",
         }
     }
 }

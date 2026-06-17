@@ -271,13 +271,6 @@ pub enum ModelFormat {
     /// Best for production inference where load time matters.
     /// File extension: `.rkyv`
     Rkyv,
-
-    /// Bincode format - compact binary, serde-based
-    ///
-    /// Uses bincode for efficient binary serialization.
-    /// Good balance of size and compatibility.
-    /// File extension: `.bin`
-    Bincode,
 }
 
 impl ModelFormat {
@@ -285,7 +278,6 @@ impl ModelFormat {
     pub fn extension(&self) -> &'static str {
         match self {
             Self::Rkyv => "rkyv",
-            Self::Bincode => "bin",
         }
     }
 
@@ -293,7 +285,6 @@ impl ModelFormat {
     pub fn filename(&self) -> &'static str {
         match self {
             Self::Rkyv => "best_model.rkyv",
-            Self::Bincode => "best_model.bin",
         }
     }
 }
@@ -1392,7 +1383,7 @@ pub struct TunerConfig {
     /// ```ignore
     /// let config = TunerConfig::new()
     ///     .with_output_dir("results")
-    ///     .with_save_model_formats(vec![ModelFormat::Rkyv, ModelFormat::Bincode]);
+    ///     .with_save_model_formats(vec![ModelFormat::Rkyv]);
     /// ```
     pub save_model_formats: Vec<ModelFormat>,
 }
@@ -1755,11 +1746,6 @@ impl TunerConfig {
     /// let config = TunerConfig::new()
     ///     .with_output_dir("results")
     ///     .with_save_model_formats(vec![ModelFormat::Rkyv]);
-    ///
-    /// // Save in both formats
-    /// let config = TunerConfig::new()
-    ///     .with_output_dir("results")
-    ///     .with_save_model_formats(vec![ModelFormat::Rkyv, ModelFormat::Bincode]);
     /// ```
     pub fn with_save_model_formats(mut self, formats: Vec<ModelFormat>) -> Self {
         self.save_model_formats = formats;

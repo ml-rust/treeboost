@@ -292,7 +292,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_grid_strategy(GridStrategy::Cartesian { points_per_dim: 2 })
         .with_eval_strategy(EvalStrategy::holdout(0.2))
         .with_output_dir(output_dir) // Enable logging to directory
-        .with_save_model_formats(vec![ModelFormat::Rkyv, ModelFormat::Bincode]) // Save in both formats
+        .with_save_model_formats(vec![ModelFormat::Rkyv])
         .with_verbose(true);
 
     let mut tuner = AutoTuner::<GBDTModel>::new(base_config.clone())
@@ -302,7 +302,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Tuning with model saving enabled...");
     println!("  Output directory: {}", output_dir.display());
-    println!("  Formats: rkyv (zero-copy) and bincode (compact)\n");
+    println!("  Format: rkyv (zero-copy)\n");
 
     let start = Instant::now();
     let (best_config, history) = tuner
@@ -350,9 +350,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
-                // Test loading the saved models
+                // Test loading the saved model
                 let rkyv_path = run_dir.join("best_model.rkyv");
-                let bincode_path = run_dir.join("best_model.bin");
 
                 if rkyv_path.exists() {
                     println!("\nLoading model from rkyv...");
@@ -371,13 +370,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .map(|(a, b)| (a - b).abs())
                         .fold(0.0, f32::max);
                     println!("  Max prediction diff: {:.6}", max_diff);
-                }
-
-                if bincode_path.exists() {
-                    println!("\nLoading model from bincode...");
-                    let loaded = treeboost::serialize::load_model_bincode(&bincode_path)
-                        .expect("Should load bincode model");
-                    println!("  Loaded {} trees", loaded.num_trees());
                 }
 
                 break; // Only process first run directory
@@ -401,7 +393,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Evaluation strategies: Holdout split, K-fold cross-validation");
     println!("  - Progress callbacks for real-time monitoring");
     println!("  - Integration with early stopping");
-    println!("  - Model saving in multiple formats (rkyv, bincode)");
+    println!("  - Model saving in rkyv format (zero-copy)");
     println!("  - Streaming CSV trial logs for interrupted runs");
     println!("\nFor production use, consider:");
     println!("  - More iterations (3-5) for better convergence");

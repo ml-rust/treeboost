@@ -184,7 +184,6 @@ impl TrialLogger {
         let path = self.run_dir.join(format.filename());
         match format {
             ModelFormat::Rkyv => model.save_rkyv(&path),
-            ModelFormat::Bincode => model.save_bincode(&path),
         }
     }
 

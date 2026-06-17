@@ -268,9 +268,6 @@ impl GBDTModel {
                 ModelFormat::Rkyv => {
                     crate::serialize::save_model(self, &model_path)?;
                 }
-                ModelFormat::Bincode => {
-                    crate::serialize::save_model_bincode(self, &model_path)?;
-                }
             }
         }
 

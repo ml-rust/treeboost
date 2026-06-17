@@ -355,10 +355,6 @@ impl TunableModel for GBDTModel {
         crate::serialize::save_model(self, path)
     }
 
-    fn save_bincode(&self, path: &Path) -> Result<()> {
-        crate::serialize::save_model_bincode(self, path)
-    }
-
     fn supports_conformal() -> bool {
         true
     }

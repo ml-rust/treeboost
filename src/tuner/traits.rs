@@ -91,8 +91,7 @@ impl From<&str> for ParamValue {
 /// - [`get_learning_rate`](Self::get_learning_rate) - Override if learning rate is tunable
 /// - [`configure_validation`](Self::configure_validation) - Override to enable early stopping
 /// - [`set_num_rounds`](Self::set_num_rounds) - Override to configure training rounds
-/// - [`save_rkyv`](Self::save_rkyv) / [`save_bincode`](Self::save_bincode) - Override to
-///   enable model serialization after tuning
+/// - [`save_rkyv`](Self::save_rkyv) - Override to enable model serialization after tuning
 ///
 /// # Example Implementation
 ///
@@ -208,16 +207,6 @@ pub trait TunableModel: Clone + Send + Sync + Sized {
     ///
     /// Default implementation returns an error. Override for models that support serialization.
     fn save_rkyv(&self, path: &std::path::Path) -> Result<()> {
-        let _ = path;
-        Err(crate::TreeBoostError::Config(
-            "Model serialization not supported for this model type".to_string(),
-        ))
-    }
-
-    /// Save the model to a file in bincode format
-    ///
-    /// Default implementation returns an error. Override for models that support serialization.
-    fn save_bincode(&self, path: &std::path::Path) -> Result<()> {
         let _ = path;
         Err(crate::TreeBoostError::Config(
             "Model serialization not supported for this model type".to_string(),
