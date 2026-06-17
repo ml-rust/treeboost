@@ -20,7 +20,7 @@ use crate::tuner::{
 ///
 /// - Optimistic: Fast mode, uses pre-encoded data (may have target leakage)
 /// - Realistic: Accurate mode, encodes per split (no target leakage)
-#[pyclass(name = "TuningMode", eq)]
+#[pyclass(from_py_object, name = "TuningMode", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyTuningMode {
     pub(crate) inner: TuningMode,
@@ -83,7 +83,7 @@ impl From<TuningMode> for PyTuningMode {
 /// - ValidationLoss: Lower is better (default)
 /// - F1Score: Higher is better
 /// - RocAuc: Higher is better (binary classification)
-#[pyclass(name = "OptimizationMetric", eq)]
+#[pyclass(from_py_object, name = "OptimizationMetric", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyOptimizationMetric {
     pub(crate) inner: OptimizationMetric,
@@ -121,6 +121,16 @@ impl PyOptimizationMetric {
         }
     }
 
+    /// Use Rank IC (higher is better)
+    ///
+    /// Spearman rank correlation between predictions and targets. Regression only.
+    #[staticmethod]
+    fn rank_ic() -> Self {
+        Self {
+            inner: OptimizationMetric::RankIc,
+        }
+    }
+
     /// Check if higher values are better for this metric
     #[getter]
     fn higher_is_better(&self) -> bool {
@@ -138,6 +148,7 @@ impl PyOptimizationMetric {
             OptimizationMetric::ValidationLoss => "OptimizationMetric.val_loss()",
             OptimizationMetric::F1Score => "OptimizationMetric.f1_score()",
             OptimizationMetric::RocAuc => "OptimizationMetric.roc_auc()",
+            OptimizationMetric::RankIc => "OptimizationMetric.rank_ic()",
         }
     }
 }
@@ -155,7 +166,7 @@ impl From<OptimizationMetric> for PyOptimizationMetric {
 /// - Regression: Only loss (MSE)
 /// - BinaryClassification: Loss, F1, ROC-AUC
 /// - MultiClassClassification: Loss, F1
-#[pyclass(name = "TaskType", eq)]
+#[pyclass(from_py_object, name = "TaskType", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyTaskType {
     pub(crate) inner: TaskType,
@@ -226,7 +237,7 @@ impl From<TaskType> for PyTaskType {
 ///
 /// - Rkyv: Zero-copy deserialization, fastest loading
 /// - Bincode: Compact binary, serde-based
-#[pyclass(name = "ModelFormat", eq)]
+#[pyclass(from_py_object, name = "ModelFormat", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyModelFormat {
     pub(crate) inner: ModelFormat,
@@ -289,7 +300,7 @@ impl From<ModelFormat> for PyModelFormat {
 /// - Cartesian: Full grid (points_per_dim^n candidates)
 /// - LatinHypercube: Space-filling design
 /// - Random: Pure random sampling
-#[pyclass(name = "GridStrategy", eq)]
+#[pyclass(from_py_object, name = "GridStrategy", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyGridStrategy {
     pub(crate) inner: GridStrategy,
@@ -385,7 +396,7 @@ impl From<GridStrategy> for PyGridStrategy {
 ///
 /// - Holdout: Train/validation split with optional k-fold CV
 /// - Conformal: Prediction interval-based evaluation
-#[pyclass(name = "EvalStrategy", eq)]
+#[pyclass(from_py_object, name = "EvalStrategy", eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyEvalStrategy {
     pub(crate) inner: EvalStrategy,

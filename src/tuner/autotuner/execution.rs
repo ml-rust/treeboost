@@ -100,7 +100,7 @@ fn evaluate_single<M: TunableModel>(
     if !full_params.contains_key("learning_rate") {
         full_params.insert(
             "learning_rate".into(),
-            M::get_learning_rate(&tuner.base_config()),
+            M::get_learning_rate(tuner.base_config()),
         );
     }
 
@@ -210,6 +210,8 @@ pub(super) fn evaluate_candidates<M: TunableModel>(
 /// Evaluate candidates for realistic mode (encoding per split)
 ///
 /// For realistic mode, we cannot parallelize because encoding is stateful.
+// reason: kernel/training entry point with many parameters
+#[allow(clippy::too_many_arguments)]
 pub(super) fn evaluate_candidates_internal<M: TunableModel>(
     tuner: &crate::tuner::AutoTuner<M>,
     raw_data: &DataFrame,
@@ -274,7 +276,7 @@ pub(super) fn is_gpu_backend<M: TunableModel>(base_config: &M::Config) -> bool {
 /// to a random position within its bounds.
 pub(super) fn randomize_centers<M: TunableModel>(tuner: &mut crate::tuner::AutoTuner<M>) {
     use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng};
 
     // Use a seed derived from current iteration count for reproducibility
     let seed = tuner.seed().wrapping_add(tuner.history_len() as u64);

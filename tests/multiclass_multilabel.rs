@@ -52,7 +52,7 @@ fn dataframe_to_binned_multiclass(df: &DataFrame, target_col: &str) -> Result<Bi
             .unwrap()
             .f64()
             .unwrap()
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(0.0))
             .collect();
 
@@ -86,7 +86,7 @@ fn dataframe_to_binned_multiclass(df: &DataFrame, target_col: &str) -> Result<Bi
         .unwrap()
         .i32()
         .unwrap()
-        .into_iter()
+        .iter()
         .map(|v| v.unwrap_or(0) as f32)
         .collect();
 
@@ -119,7 +119,7 @@ fn dataframe_to_binned_multilabel(df: &DataFrame, label_cols: &[String]) -> Resu
             .unwrap()
             .f64()
             .unwrap()
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(0.0))
             .collect();
 
@@ -220,15 +220,15 @@ fn test_multiclass_predictions_sum_to_one() {
         max_deviation = max_deviation.max(deviation);
 
         assert!(
-            prob0 >= 0.0 && prob0 <= 1.0,
+            (0.0..=1.0).contains(&prob0),
             "Probability must be in [0, 1]"
         );
         assert!(
-            prob1 >= 0.0 && prob1 <= 1.0,
+            (0.0..=1.0).contains(&prob1),
             "Probability must be in [0, 1]"
         );
         assert!(
-            prob2 >= 0.0 && prob2 <= 1.0,
+            (0.0..=1.0).contains(&prob2),
             "Probability must be in [0, 1]"
         );
 
@@ -275,11 +275,11 @@ fn test_multiclass_with_imbalance() {
     let predictions: Vec<f32> = predictions_nested.into_iter().flatten().collect();
     let test_targets = test_binned.targets();
 
-    let mut class_correct = vec![0; 3];
-    let mut class_total = vec![0; 3];
+    let mut class_correct = [0; 3];
+    let mut class_total = [0; 3];
 
-    for i in 0..test_binned.num_rows() {
-        let true_class = test_targets[i] as usize;
+    for (i, &target) in test_targets.iter().enumerate() {
+        let true_class = target as usize;
         class_total[true_class] += 1;
 
         // Predicted class = argmax(probabilities)
@@ -439,17 +439,17 @@ fn test_multilabel_independent_predictions() -> std::result::Result<(), Box<dyn 
 
         // Each probability should be in [0, 1]
         assert!(
-            prob0 >= 0.0 && prob0 <= 1.0,
+            (0.0..=1.0).contains(&prob0),
             "Label 0 probability must be in [0, 1], got {}",
             prob0
         );
         assert!(
-            prob1 >= 0.0 && prob1 <= 1.0,
+            (0.0..=1.0).contains(&prob1),
             "Label 1 probability must be in [0, 1], got {}",
             prob1
         );
         assert!(
-            prob2 >= 0.0 && prob2 <= 1.0,
+            (0.0..=1.0).contains(&prob2),
             "Label 2 probability must be in [0, 1], got {}",
             prob2
         );

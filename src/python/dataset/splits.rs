@@ -39,12 +39,12 @@ impl PyHoldoutSplit {
                 "n_samples must be > 0",
             ));
         }
-        if val_ratio < 0.0 || val_ratio >= 1.0 {
+        if !(0.0..1.0).contains(&val_ratio) {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "val_ratio must be in [0.0, 1.0)",
             ));
         }
-        if calib_ratio < 0.0 || calib_ratio >= 1.0 {
+        if !(0.0..1.0).contains(&calib_ratio) {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "calib_ratio must be in [0.0, 1.0)",
             ));
@@ -156,7 +156,8 @@ impl PyKFoldSplit {
         }
 
         Ok(Self {
-            inner: split_kfold(n_samples, k, seed),
+            inner: split_kfold(n_samples, k, seed)
+                .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?,
         })
     }
 
@@ -173,6 +174,7 @@ impl PyKFoldSplit {
     ///
     /// Returns:
     ///     Tuple of (train_indices, val_indices) as numpy arrays
+    #[allow(clippy::type_complexity)] // reason: complex return tuple kept inline
     fn get_fold<'py>(
         &self,
         py: Python<'py>,

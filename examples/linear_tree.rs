@@ -57,7 +57,7 @@ fn create_synthetic_dataset(
                 2.0 * f0 + 1.0 * f1 + noise
             } else {
                 // Region 2: negative slope on f0, offset
-                -1.0 * f0 + 3.0 * f1 + 2.0 + noise
+                -f0 + 3.0 * f1 + 2.0 + noise
             }
         })
         .collect();

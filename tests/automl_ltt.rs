@@ -12,10 +12,13 @@ fn test_shrinkage_factor_applied() -> Result<(), Box<dyn std::error::Error>> {
     let x: Vec<f64> = (0..50).map(|i| i as f64 * 0.1).collect();
     let y: Vec<f64> = x.iter().map(|v| 2.0 * v + 5.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x).into(),
-        Series::new("target".into(), y.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        50,
+        vec![
+            Series::new("x".into(), x).into(),
+            Series::new("target".into(), y.clone()).into(),
+        ],
+    )
     .unwrap();
 
     // Test different shrinkage values are stored and affect predictions
@@ -70,10 +73,13 @@ fn test_ltt_pure_linear_data() -> Result<(), Box<dyn std::error::Error>> {
     let x_values: Vec<f64> = (0..100).map(|i| i as f64).collect();
     let y_values: Vec<f64> = x_values.iter().map(|x| x * 2.0 + 3.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        100,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     println!("\n=== Test: Pure Linear Data (y = 2x + 3) ===");
@@ -150,10 +156,13 @@ fn test_ltt_linear_plus_residual() -> Result<(), Box<dyn std::error::Error>> {
     let x_values: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
     let y_values: Vec<f64> = x_values.iter().map(|x| x * 2.0 + x.sin()).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        100,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     println!("\n=== Test: Linear + Nonlinear (y = 2x + sin(x)) ===");
@@ -237,11 +246,14 @@ fn test_ltt_with_categoricals() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     let y_values: Vec<f64> = x_values.iter().map(|x| x * 2.0 + 3.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("category".into(), cat_values).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        100,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("category".into(), cat_values).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     println!("\n=== Test: LTT with Categoricals ===");
@@ -300,11 +312,14 @@ fn test_ltt_with_id_like_columns() -> Result<(), Box<dyn std::error::Error>> {
     let id_values: Vec<String> = (0..100).map(|i| format!("ID_{:04}", i)).collect();
     let y_values: Vec<f64> = x_values.iter().map(|x| x * 2.0 + 3.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("id".into(), id_values).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        100,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("id".into(), id_values).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     // Use same good config as first test
@@ -359,11 +374,14 @@ fn test_ltt_with_user_exclusions() -> Result<(), Box<dyn std::error::Error>> {
     let corr_values: Vec<f64> = x_values.iter().map(|x| x * 3.0).collect();
     let y_values: Vec<f64> = x_values.iter().map(|x| x * 2.0 + 3.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("correlated".into(), corr_values).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        100,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("correlated".into(), corr_values).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     // Configure linear features to exclude "correlated"
@@ -407,11 +425,14 @@ fn test_ltt_feature_extractor_storage() -> Result<(), Box<dyn std::error::Error>
         .collect();
     let y_values: Vec<f64> = x_values.iter().map(|x| x * 2.0 + 3.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("category".into(), cat_values).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        50,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("category".into(), cat_values).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     let config = AutoConfig::new()
@@ -479,12 +500,15 @@ fn test_ltt_with_pipeline_encoded_categoricals() -> Result<(), Box<dyn std::erro
         })
         .collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("x".into(), x_values.clone()).into(),
-        Series::new("cat1".into(), cat1_values).into(),
-        Series::new("cat2".into(), cat2_values).into(),
-        Series::new("target".into(), y_values.clone()).into(),
-    ])
+    let df = DataFrame::new(
+        200,
+        vec![
+            Series::new("x".into(), x_values.clone()).into(),
+            Series::new("cat1".into(), cat1_values).into(),
+            Series::new("cat2".into(), cat2_values).into(),
+            Series::new("target".into(), y_values.clone()).into(),
+        ],
+    )
     .unwrap();
 
     println!("\n=== Testing LTT with Pipeline-Encoded Categoricals ===");
@@ -494,7 +518,7 @@ fn test_ltt_with_pipeline_encoded_categoricals() -> Result<(), Box<dyn std::erro
         df.width()
     );
     println!("Original dtypes:");
-    for col in df.get_columns() {
+    for col in df.columns() {
         println!("  {} : {:?}", col.name(), col.dtype());
     }
 
@@ -567,18 +591,19 @@ fn test_ltt_with_pipeline_encoded_categoricals() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 // Test to verify early validation when all features are dropped
-use polars::prelude::*;
-
 #[test]
 fn test_early_failure_when_all_features_dropped() {
     // Create data where the only feature will be dropped as ID-like
     let id_values: Vec<i64> = (0..100).collect(); // Sequential integers [0, 1, 2, ..., 99]
     let target_values: Vec<f64> = (0..100).map(|i| i as f64 * 2.0).collect();
 
-    let df = DataFrame::new(vec![
-        Series::new("id".into(), id_values).into(), // Will be dropped (ID-like name + pattern)
-        Series::new("target".into(), target_values).into(),
-    ])
+    let df = DataFrame::new(
+        100,
+        vec![
+            Series::new("id".into(), id_values).into(), // Will be dropped (ID-like name + pattern)
+            Series::new("target".into(), target_values).into(),
+        ],
+    )
     .unwrap();
 
     let config =

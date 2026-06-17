@@ -754,7 +754,7 @@ impl GBDTConfig {
 
     /// Enable conformal prediction
     pub fn with_conformal(mut self, calibration_ratio: f32, quantile: f32) -> crate::Result<Self> {
-        if calibration_ratio < 0.0 || calibration_ratio >= 1.0 {
+        if !(0.0..1.0).contains(&calibration_ratio) {
             return Err(crate::TreeBoostError::Config(format!(
                 "calibration_ratio must be in [0, 1), got {}",
                 calibration_ratio

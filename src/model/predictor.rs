@@ -348,7 +348,7 @@ impl GatedPredictor {
         let mut binned = Vec::with_capacity(num_rows * num_features);
         let mut feature_info = Vec::with_capacity(num_features);
 
-        for col in df.get_columns() {
+        for col in df.columns() {
             let col_name = col.name().to_string();
 
             // Extract column values as f32 with proper error handling
@@ -556,7 +556,7 @@ impl EnsemblePredictor {
             EnsembleStrategy::Median => {
                 let combined: Vec<f64> = (0..n_samples)
                     .map(|i| {
-                        let mut values = vec![formula_preds[i], model_preds[i]];
+                        let mut values = [formula_preds[i], model_preds[i]];
                         values
                             .sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
                         (values[0] + values[1]) / 2.0 // Median of 2 = average

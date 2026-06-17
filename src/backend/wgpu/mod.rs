@@ -545,7 +545,7 @@ mod tests {
         // Generate gradients and hessians with varied values
         let grad_hess: Vec<(f32, f32)> = (0..num_rows)
             .map(|i| {
-                let g = ((i as f32 * 0.01).sin() * 10.0) as f32;
+                let g = (i as f32 * 0.01).sin() * 10.0;
                 let h = 1.0 + (i % 10) as f32 * 0.1;
                 (g, h)
             })

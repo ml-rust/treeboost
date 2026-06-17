@@ -3,8 +3,9 @@
 //! Measures training and inference performance across dataset sizes.
 //! Fast execution (~3-5 minutes total) with consistent synthetic data.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use rand::prelude::*;
+use std::hint::black_box;
 use std::time::Duration;
 
 use treeboost::backend::BackendType;
@@ -19,11 +20,11 @@ fn generate_data(num_rows: usize, num_features: usize, seed: u64) -> (Vec<f32>, 
     for _ in 0..num_rows {
         let mut row_sum = 0.0f32;
         for f in 0..num_features {
-            let val: f32 = rng.gen_range(0.0..10.0);
+            let val: f32 = rng.random_range(0.0..10.0);
             features.push(val);
             row_sum += val * (f as f32 + 1.0) * 0.1;
         }
-        targets.push(row_sum + rng.gen_range(-1.0..1.0));
+        targets.push(row_sum + rng.random_range(-1.0..1.0));
     }
 
     (features, targets)

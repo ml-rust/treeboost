@@ -276,7 +276,7 @@ impl DatasetAnalysis {
         let targets: Vec<f32> = target_series
             .cast(&DataType::Float32)?
             .f32()?
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(f32::NAN))
             .collect();
 
@@ -323,7 +323,7 @@ impl DatasetAnalysis {
                 // Safe to cast numeric types
                 if let Ok(numeric_series) = col.cast(&DataType::Float32) {
                     if let Ok(vals) = numeric_series.f32() {
-                        for (r_idx, val) in vals.into_iter().enumerate() {
+                        for (r_idx, val) in vals.iter().enumerate() {
                             raw_features[r_idx * num_features + f_idx] = val.unwrap_or(f32::NAN);
                         }
                     }
@@ -336,7 +336,7 @@ impl DatasetAnalysis {
                     let mut category_map: HashMap<&str, f32> = HashMap::new();
                     let mut next_code = 0f32;
 
-                    for (r_idx, val) in str_series.into_iter().enumerate() {
+                    for (r_idx, val) in str_series.iter().enumerate() {
                         if let Some(s) = val {
                             let code = *category_map.entry(s).or_insert_with(|| {
                                 let c = next_code;
@@ -360,7 +360,7 @@ impl DatasetAnalysis {
 
         // --- Sample indices for efficiency ---
         let sample_indices: Option<Vec<usize>> = if num_rows > config.max_sample_rows {
-            use rand::Rng;
+            use rand::RngExt;
             use rand::SeedableRng;
 
             // OPTIMIZED: Reservoir sampling instead of shuffle
@@ -579,7 +579,7 @@ impl DatasetAnalysis {
 
         // --- Sample indices for efficiency ---
         let sample_indices: Option<Vec<usize>> = if num_rows > config.max_sample_rows {
-            use rand::Rng;
+            use rand::RngExt;
             use rand::SeedableRng;
 
             // OPTIMIZED: Direct random sampling instead of shuffle

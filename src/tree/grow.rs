@@ -905,10 +905,7 @@ impl TreeGrower {
                 };
 
             // Phase 3: Process results - compute larger children, find splits, push to heap
-            for (state, smaller_hists) in batch_states
-                .into_iter()
-                .zip(all_smaller_histograms.into_iter())
-            {
+            for (state, smaller_hists) in batch_states.into_iter().zip(all_smaller_histograms) {
                 let smaller_histograms = NodeHistograms::from_vec(smaller_hists);
 
                 // Extract parent histograms (must be Standard variant in this path)
@@ -1651,10 +1648,7 @@ impl TreeGrower {
                 };
 
             // Phase 3: Process results
-            for (state, smaller_hists) in batch_states
-                .into_iter()
-                .zip(all_smaller_histograms.into_iter())
-            {
+            for (state, smaller_hists) in batch_states.into_iter().zip(all_smaller_histograms) {
                 let smaller_histograms = NodeHistograms::from_vec(smaller_hists);
 
                 // Extract parent histograms (must be Standard variant in grow_fused path)

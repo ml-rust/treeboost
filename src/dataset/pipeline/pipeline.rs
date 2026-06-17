@@ -149,7 +149,7 @@ impl DataPipeline {
         target_column: &str,
         categorical_columns: Option<&[&str]>,
     ) -> Result<(BinnedDataset, PipelineState, DataFrame)> {
-        let pl_path = PlPath::new(&path.as_ref().to_string_lossy());
+        let pl_path = PlRefPath::new(&*path.as_ref().to_string_lossy());
         let df = LazyFrame::scan_parquet(pl_path, Default::default())?.collect()?;
         self.process_for_training(df, target_column, categorical_columns, None)
     }
@@ -214,7 +214,7 @@ impl DataPipeline {
             .into_iter()
             .filter(|name| {
                 let name_str = name.as_str();
-                name_str != target_column && !era_column.map_or(false, |era| era == name_str)
+                name_str != target_column && (era_column != Some(name_str))
             })
             .map(|s| s.to_string())
             .collect();
@@ -342,7 +342,7 @@ impl DataPipeline {
         let target_col = df.column(target_column)?;
         new_columns.push(target_col.clone());
 
-        let filtered_df = DataFrame::new(new_columns).map_err(|e| {
+        let filtered_df = DataFrame::new_infer_height(new_columns).map_err(|e| {
             TreeBoostError::Data(format!("Failed to build filtered DataFrame: {}", e))
         })?;
 
@@ -401,7 +401,7 @@ impl DataPipeline {
         path: impl AsRef<Path>,
         state: &PipelineState,
     ) -> Result<BinnedDataset> {
-        let pl_path = PlPath::new(&path.as_ref().to_string_lossy());
+        let pl_path = PlRefPath::new(&*path.as_ref().to_string_lossy());
         let df = LazyFrame::scan_parquet(pl_path, Default::default())?.collect()?;
         let (_preprocessed_df, dataset) = self.process_for_inference(df, state)?;
         Ok(dataset)
@@ -475,7 +475,7 @@ impl DataPipeline {
             .into_iter()
             .map(|s| s.into_column())
             .collect();
-        let preprocessed_df = DataFrame::new(columns).map_err(|e| {
+        let preprocessed_df = DataFrame::new_infer_height(columns).map_err(|e| {
             TreeBoostError::Data(format!("Failed to create preprocessed DataFrame: {}", e))
         })?;
 
@@ -537,7 +537,7 @@ impl DataPipeline {
             let mut sorted = non_nan_values.clone();
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
             let mid = sorted.len() / 2;
-            if sorted.len() % 2 == 0 {
+            if sorted.len().is_multiple_of(2) {
                 (sorted[mid - 1] + sorted[mid]) / 2.0
             } else {
                 sorted[mid]
@@ -740,7 +740,7 @@ impl DataPipeline {
             .map_err(|e| TreeBoostError::Data(format!("Failed to cast to f64: {}", e)))?
             .f64()
             .map_err(|e| TreeBoostError::Data(format!("Failed to get f64 chunked: {}", e)))?
-            .into_iter()
+            .iter()
             .map(|opt| Ok(opt.unwrap_or(f64::NAN)))
             .collect()
     }
@@ -756,7 +756,7 @@ impl DataPipeline {
             .map_err(|e| TreeBoostError::Data(format!("Failed to get str chunked: {}", e)))?;
 
         Ok(str_chunked
-            .into_iter()
+            .iter()
             .map(|opt| opt.unwrap_or("").to_string())
             .collect())
     }
@@ -785,7 +785,7 @@ impl DataPipeline {
         let mut next_idx = 0u16;
 
         let indices: Vec<u16> = str_ca
-            .into_iter()
+            .iter()
             .map(|opt| {
                 opt.map_or(0, |s| {
                     *era_map.entry(s.to_string()).or_insert_with(|| {

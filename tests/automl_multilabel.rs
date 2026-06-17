@@ -37,7 +37,7 @@ fn create_multilabel_dataframe(n_rows: usize, n_labels: usize, seed: u64) -> Dat
         columns.push(Column::new(format!("label_{}", k).into(), label));
     }
 
-    DataFrame::new(columns).unwrap()
+    DataFrame::new(n_rows, columns).unwrap()
 }
 
 // =============================================================================
@@ -113,6 +113,9 @@ fn test_automl_multilabel_correctness() {
         .expect("Prediction should succeed");
 
     // Compute accuracy per label
+    // `k` indexes the label dimension of row-major `proba[row][k]` and builds the
+    // column name, so there is no single slice to drive the loop via an iterator.
+    #[allow(clippy::needless_range_loop)]
     for k in 0..n_labels {
         let col_name = format!("label_{}", k);
         let targets: Vec<f64> = df
@@ -193,7 +196,7 @@ fn test_threshold_tuning() {
     // Thresholds should be in valid range
     for &threshold in &tune_result.thresholds {
         assert!(
-            threshold >= 0.01 && threshold <= 0.99,
+            (0.01..=0.99).contains(&threshold),
             "Threshold {} should be in [0.01, 0.99]",
             threshold
         );
@@ -253,7 +256,7 @@ fn test_threshold_tuning_improves_f1() {
     // Tuned thresholds should give reasonable F1 scores
     for &f1 in &tune_result.f1_scores {
         assert!(
-            f1 >= 0.0 && f1 <= 1.0,
+            (0.0..=1.0).contains(&f1),
             "F1 score {} should be in [0, 1]",
             f1
         );
@@ -289,7 +292,7 @@ fn test_multilabel_end_to_end_workflow() {
     // Verify tuning produced valid results
     assert_eq!(tune_result.thresholds.len(), n_labels);
     for &t in &tune_result.thresholds {
-        assert!(t >= 0.01 && t <= 0.99, "Threshold {} out of range", t);
+        assert!((0.01..=0.99).contains(&t), "Threshold {} out of range", t);
     }
 
     // 4. Make predictions with tuned thresholds
@@ -310,7 +313,7 @@ fn test_multilabel_end_to_end_workflow() {
         // Probabilities should be in [0, 1]
         for &prob in p {
             assert!(
-                prob >= 0.0 && prob <= 1.0,
+                (0.0..=1.0).contains(&prob),
                 "Probability {} out of range",
                 prob
             );
@@ -426,5 +429,5 @@ fn create_imbalanced_multilabel_dataframe(n_rows: usize, n_labels: usize, seed: 
         columns.push(Column::new(format!("label_{}", k).into(), label));
     }
 
-    DataFrame::new(columns).unwrap()
+    DataFrame::new(n_rows, columns).unwrap()
 }

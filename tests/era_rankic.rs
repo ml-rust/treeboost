@@ -179,7 +179,7 @@ fn test_rank_ic_with_eras_is_correct() {
     // For synthetic data with clear patterns, cross-sectional IC can also be very high
     // The key difference is the METHODOLOGY (per-era vs global), not necessarily the value
     assert!(
-        ic_correct >= -0.5 && ic_correct <= 1.0,
+        (-0.5..=1.0).contains(&ic_correct),
         "IC with eras should be reasonable: got {:.4}",
         ic_correct
     );
@@ -275,12 +275,12 @@ fn test_comparison_with_vs_without_eras() {
     // - WITHOUT eras: ranks ALL 12 rows together (time leakage)
     // - WITH eras: ranks 3 rows within each of 4 dates (correct)
     assert!(
-        ic_without >= -0.5 && ic_without <= 1.0,
+        (-0.5..=1.0).contains(&ic_without),
         "IC without eras should be reasonable: got {:.4}",
         ic_without
     );
     assert!(
-        ic_with >= -0.5 && ic_with <= 1.0,
+        (-0.5..=1.0).contains(&ic_with),
         "IC with eras should be reasonable: got {:.4}",
         ic_with
     );
@@ -562,7 +562,7 @@ fn test_custom_validation_with_era_split() {
     // NOTE: For synthetic data with clear patterns, IC can be very high (0.9-1.0)
     // The key is that it's computed ONLY on validation eras (verified by debug output)
     assert!(
-        rank_ic >= -0.5 && rank_ic <= 1.0,
+        (-0.5..=1.0).contains(&rank_ic),
         "Rank IC should be reasonable for time-based split: got {:.4}",
         rank_ic
     );
@@ -585,7 +585,7 @@ fn test_custom_validation_with_era_split() {
     // This is the key test: if IC were computed on all data, it would be inflated
     // For synthetic data with clear patterns, IC can be very high (verified by debug output)
     assert!(
-        val_ic >= -0.5 && val_ic <= 1.0,
+        (-0.5..=1.0).contains(&val_ic),
         "Validation IC should be reasonable: got {:.4}",
         val_ic
     );
@@ -747,13 +747,13 @@ fn test_holdout_vs_conformal_with_rankic() {
     // Both should have reasonable IC values (not inflated)
     // For panel data with proper era-based splits, IC should be moderate
     assert!(
-        ic_holdout >= -0.5 && ic_holdout <= 1.0,
+        (-0.5..=1.0).contains(&ic_holdout),
         "Holdout IC should be reasonable: got {:.4}",
         ic_holdout
     );
 
     assert!(
-        ic_conformal >= -0.5 && ic_conformal <= 1.0,
+        (-0.5..=1.0).contains(&ic_conformal),
         "Conformal IC should be reasonable: got {:.4}",
         ic_conformal
     );
@@ -834,7 +834,7 @@ fn test_rankic_without_eras_uses_random_split() {
 
     // Should still compute IC (using global ranking, which is acceptable without eras)
     assert!(
-        ic >= -1.0 && ic <= 1.0,
+        (-1.0..=1.0).contains(&ic),
         "IC should be in valid range: got {:.4}",
         ic
     );

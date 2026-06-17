@@ -121,8 +121,7 @@ fn dataframe_to_binned_with_stats(
     // Create feature info
     let feature_info: Vec<treeboost::dataset::FeatureInfo> = feature_cols
         .iter()
-        .enumerate()
-        .map(|(_i, &name)| treeboost::dataset::FeatureInfo {
+        .map(|&name| treeboost::dataset::FeatureInfo {
             name: name.to_string(),
             feature_type: treeboost::dataset::FeatureType::Numeric,
             num_bins: 255,
@@ -518,6 +517,8 @@ fn calculate_rmse_f32(predictions: &[f32], targets: &[f32]) -> f32 {
 }
 
 /// Calculate Root Mean Squared Error (f64 version)
+// reason: kept as a test helper alongside the f32 variant; not used by every test.
+#[allow(dead_code)]
 fn calculate_rmse(predictions: &[f64], targets: &[f64]) -> f64 {
     assert_eq!(
         predictions.len(),

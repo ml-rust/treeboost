@@ -452,12 +452,12 @@ impl PipelineStep for EngineerFeaturesStep {
                 let str_chunked = str_series.str()?;
 
                 let mapped: Vec<f64> = str_chunked
-                    .into_iter()
+                    .iter()
                     .map(|opt| lut.get(opt.unwrap_or("")))
                     .collect();
 
                 let new_series = Series::new(lut.output_name().as_str().into(), mapped);
-                df = df.with_column(new_series)?.clone();
+                df = df.with_column(new_series.into())?.clone();
             }
         }
 
@@ -469,7 +469,7 @@ impl PipelineStep for EngineerFeaturesStep {
                 let two_pi = 2.0 * std::f64::consts::PI;
 
                 let transformed: Vec<f64> = values
-                    .into_iter()
+                    .iter()
                     .map(|opt| {
                         let x = opt.unwrap_or(0.0);
                         let angle = two_pi * x / trig.period;
@@ -481,7 +481,7 @@ impl PipelineStep for EngineerFeaturesStep {
                     .collect();
 
                 let new_series = Series::new(trig.output_name().as_str().into(), transformed);
-                df = df.with_column(new_series)?.clone();
+                df = df.with_column(new_series.into())?.clone();
             }
         }
 
@@ -495,7 +495,7 @@ impl PipelineStep for EngineerFeaturesStep {
         if !self.interaction_pairs.is_empty() {
             // Convert named pairs to index pairs
             let numeric_cols: Vec<String> = df
-                .get_columns()
+                .columns()
                 .iter()
                 .filter(|col| col.dtype().is_numeric())
                 .map(|col| col.name().to_string())
@@ -521,7 +521,7 @@ impl PipelineStep for EngineerFeaturesStep {
         if !self.ratio_pairs.is_empty() {
             // Convert named pairs to index pairs
             let numeric_cols: Vec<String> = df
-                .get_columns()
+                .columns()
                 .iter()
                 .filter(|col| col.dtype().is_numeric())
                 .map(|col| col.name().to_string())
@@ -552,12 +552,12 @@ impl PipelineStep for EngineerFeaturesStep {
     }
 
     fn serialize_state(&self) -> Result<serde_json::Value> {
-        Ok(serde_json::to_value(self).map_err(|e| {
+        serde_json::to_value(self).map_err(|e| {
             TreeBoostError::Serialization(format!(
                 "Failed to serialize EngineerFeaturesStep: {}",
                 e
             ))
-        })?)
+        })
     }
 
     fn deserialize_state(&mut self, state: serde_json::Value) -> Result<()> {
@@ -695,7 +695,7 @@ impl FeatureExpr {
                     let series = df.column(name)?;
                     let casted = series.cast(&DataType::Float64)?;
                     let values = casted.f64()?;
-                    values.into_iter().map(|v| v.unwrap_or(0.0)).collect()
+                    values.iter().map(|v| v.unwrap_or(0.0)).collect()
                 }
                 FlatOp::Const(v) => vec![*v; n],
                 FlatOp::Add(l, r) => {
@@ -730,7 +730,7 @@ impl FeatureExpr {
                     let str_series = series.cast(&DataType::String)?;
                     let str_chunked = str_series.str()?;
                     str_chunked
-                        .into_iter()
+                        .iter()
                         .map(|opt| {
                             let cat = opt.unwrap_or("");
                             mapping
@@ -747,7 +747,7 @@ impl FeatureExpr {
                     let values = casted.f64()?;
                     let two_pi = 2.0 * std::f64::consts::PI;
                     values
-                        .into_iter()
+                        .iter()
                         .map(|v| (two_pi * v.unwrap_or(0.0) / period).sin())
                         .collect()
                 }
@@ -757,7 +757,7 @@ impl FeatureExpr {
                     let values = casted.f64()?;
                     let two_pi = 2.0 * std::f64::consts::PI;
                     values
-                        .into_iter()
+                        .iter()
                         .map(|v| (two_pi * v.unwrap_or(0.0) / period).cos())
                         .collect()
                 }
@@ -766,7 +766,7 @@ impl FeatureExpr {
                     let casted = series.cast(&DataType::Float64)?;
                     let values = casted.f64()?;
                     values
-                        .into_iter()
+                        .iter()
                         .map(|v| (1.0 + v.unwrap_or(0.0)).ln())
                         .collect()
                 }
@@ -775,7 +775,7 @@ impl FeatureExpr {
                     let casted = series.cast(&DataType::Float64)?;
                     let values = casted.f64()?;
                     values
-                        .into_iter()
+                        .iter()
                         .map(|v| {
                             let x = v.unwrap_or(0.0);
                             x * x
@@ -787,7 +787,7 @@ impl FeatureExpr {
                     let casted = series.cast(&DataType::Float64)?;
                     let values = casted.f64()?;
                     values
-                        .into_iter()
+                        .iter()
                         .map(|v| v.unwrap_or(0.0).max(0.0).sqrt())
                         .collect()
                 }
@@ -796,7 +796,7 @@ impl FeatureExpr {
                     let casted = series.cast(&DataType::Float64)?;
                     let values = casted.f64()?;
                     values
-                        .into_iter()
+                        .iter()
                         .map(|v| v.unwrap_or(0.0).powf(*power))
                         .collect()
                 }
@@ -925,6 +925,7 @@ impl FeatureOp {
     }
 
     /// Add two expressions
+    #[allow(clippy::should_implement_trait)] // reason: intentional inherent API, not the std trait
     pub fn add(mut self, other: Self) -> Self {
         let other_root = self.expr.merge(other.expr);
         let new_root = self.expr.push(FlatOp::Add(self.expr.root, other_root));
@@ -933,6 +934,7 @@ impl FeatureOp {
     }
 
     /// Subtract: self - other
+    #[allow(clippy::should_implement_trait)] // reason: intentional inherent API, not the std trait
     pub fn sub(mut self, other: Self) -> Self {
         let other_root = self.expr.merge(other.expr);
         let new_root = self.expr.push(FlatOp::Sub(self.expr.root, other_root));
@@ -941,6 +943,7 @@ impl FeatureOp {
     }
 
     /// Multiply two expressions
+    #[allow(clippy::should_implement_trait)] // reason: intentional inherent API, not the std trait
     pub fn mul(mut self, other: Self) -> Self {
         let other_root = self.expr.merge(other.expr);
         let new_root = self.expr.push(FlatOp::Mul(self.expr.root, other_root));
@@ -949,6 +952,7 @@ impl FeatureOp {
     }
 
     /// Divide: self / other
+    #[allow(clippy::should_implement_trait)] // reason: intentional inherent API, not the std trait
     pub fn div(mut self, other: Self) -> Self {
         let other_root = self.expr.merge(other.expr);
         let new_root = self.expr.push(FlatOp::Div(self.expr.root, other_root));
@@ -1127,7 +1131,7 @@ impl PipelineStep for CustomFeaturesStep {
         for feature in &self.features {
             let values = feature.expr.evaluate(&df)?;
             let series = Series::new(feature.name.as_str().into(), values);
-            df = df.with_column(series)?.clone();
+            df = df.with_column(series.into())?.clone();
         }
         Ok(df)
     }
@@ -1137,9 +1141,9 @@ impl PipelineStep for CustomFeaturesStep {
     }
 
     fn serialize_state(&self) -> Result<serde_json::Value> {
-        Ok(serde_json::to_value(self).map_err(|e| {
+        serde_json::to_value(self).map_err(|e| {
             TreeBoostError::Serialization(format!("Failed to serialize CustomFeaturesStep: {}", e))
-        })?)
+        })
     }
 
     fn deserialize_state(&mut self, state: serde_json::Value) -> Result<()> {
@@ -1215,12 +1219,12 @@ impl PipelineStep for EngineerTimeSeriesFeaturesStep {
     }
 
     fn serialize_state(&self) -> Result<serde_json::Value> {
-        Ok(serde_json::to_value(self).map_err(|e| {
+        serde_json::to_value(self).map_err(|e| {
             TreeBoostError::Serialization(format!(
                 "Failed to serialize EngineerTimeSeriesFeaturesStep: {}",
                 e
             ))
-        })?)
+        })
     }
 
     fn deserialize_state(&mut self, state: serde_json::Value) -> Result<()> {
@@ -1259,6 +1263,12 @@ pub struct EncodeCategoricalsStep {
     pub encodings: HashMap<String, CategoryEncoding>,
 }
 
+impl Default for EncodeCategoricalsStep {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EncodeCategoricalsStep {
     pub fn new() -> Self {
         Self {
@@ -1272,7 +1282,7 @@ impl EncodeCategoricalsStep {
         let str_series = series.cast(&DataType::String)?;
         let str_chunked = str_series.str()?;
         Ok(str_chunked
-            .into_iter()
+            .iter()
             .map(|opt| opt.unwrap_or("").to_string())
             .collect())
     }
@@ -1293,7 +1303,7 @@ impl PipelineStep for EncodeCategoricalsStep {
 
         // Identify categorical columns
         let categorical_columns: Vec<String> = df
-            .get_columns()
+            .columns()
             .iter()
             .filter(|col| matches!(col.dtype(), DataType::String | DataType::Categorical(_, _)))
             .map(|col| col.name().to_string())
@@ -1343,7 +1353,7 @@ impl PipelineStep for EncodeCategoricalsStep {
 
             // Replace categorical column with encoded Float64 column
             let encoded_series = Series::new(col_name.as_str().into(), encoded);
-            df.replace(col_name.as_str(), encoded_series)?;
+            df.replace(col_name.as_str(), encoded_series.into())?;
         }
 
         Ok(df)
@@ -1370,7 +1380,7 @@ impl PipelineStep for EncodeCategoricalsStep {
 
                 // Replace with encoded Float64 column
                 let encoded_series = Series::new(col_name.as_str().into(), encoded);
-                df.replace(col_name.as_str(), encoded_series)?;
+                df.replace(col_name.as_str(), encoded_series.into())?;
             }
         }
 
@@ -1467,9 +1477,9 @@ impl PipelineStep for TransformTargetStep {
     }
 
     fn serialize_state(&self) -> Result<serde_json::Value> {
-        Ok(serde_json::to_value(&self.transform).map_err(|e| {
+        serde_json::to_value(&self.transform).map_err(|e| {
             TreeBoostError::Serialization(format!("Failed to serialize TransformTargetStep: {}", e))
-        })?)
+        })
     }
 
     fn deserialize_state(&mut self, state: serde_json::Value) -> Result<()> {
@@ -1512,7 +1522,7 @@ impl BinNumericFeaturesStep {
         series
             .cast(&DataType::Float64)?
             .f64()?
-            .into_iter()
+            .iter()
             .map(|opt| Ok(opt.unwrap_or(f64::NAN)))
             .collect()
     }
@@ -1529,7 +1539,7 @@ impl PipelineStep for BinNumericFeaturesStep {
         // Actual binning to u8 happens later in DataPipeline
         let binner = QuantileBinner::new(self.num_bins);
 
-        for col in df.get_columns() {
+        for col in df.columns() {
             if col.dtype().is_numeric() {
                 let col_name = col.name().to_string();
                 let values = Self::series_to_f64(col.as_materialized_series())?;
@@ -1631,12 +1641,12 @@ impl PipelineStep for ExtractLinearFeaturesStep {
     }
 
     fn serialize_state(&self) -> Result<serde_json::Value> {
-        Ok(serde_json::to_value(self).map_err(|e| {
+        serde_json::to_value(self).map_err(|e| {
             TreeBoostError::Serialization(format!(
                 "Failed to serialize ExtractLinearFeaturesStep: {}",
                 e
             ))
-        })?)
+        })
     }
 
     fn deserialize_state(&mut self, state: serde_json::Value) -> Result<()> {

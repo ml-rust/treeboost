@@ -221,7 +221,7 @@ impl MultiLabelFocalLoss {
         let num_rows = targets.len() / num_outputs;
         let mut initial = vec![0.0; num_outputs];
 
-        for output_idx in 0..num_outputs {
+        for (output_idx, init) in initial.iter_mut().enumerate() {
             let mut positive_count = 0.0;
             for row in 0..num_rows {
                 let idx = row * num_outputs + output_idx;
@@ -231,7 +231,7 @@ impl MultiLabelFocalLoss {
             }
 
             let p = (positive_count / num_rows as f32).clamp(self.eps, 1.0 - self.eps);
-            initial[output_idx] = (p / (1.0 - p)).ln();
+            *init = (p / (1.0 - p)).ln();
         }
 
         initial

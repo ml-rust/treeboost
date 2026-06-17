@@ -2,7 +2,7 @@
 //!
 //! Tree Node Vector Storage (2D Multi-Label Support)
 
-use treeboost::tree::{VectorNode, VectorNodeType, VectorTree};
+use treeboost::tree::{VectorNode, VectorTree};
 
 /// Test vector node creation and accessors
 #[test]

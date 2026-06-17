@@ -4,7 +4,7 @@
 
 use pyo3::prelude::*;
 
-use crate::booster::GBDTConfig;
+use crate::booster::{GBDTConfig, GBDTModel};
 use crate::tuner::AutoTuner;
 
 use super::callback::{validate_callable, PyProgressCallback};
@@ -206,7 +206,7 @@ impl PyAutoTuner {
         dataset: &PyBinnedDataset,
     ) -> PyResult<(PyGBDTConfig, PySearchHistory)> {
         // Build the AutoTuner
-        let mut tuner = AutoTuner::new(self.base_config.clone());
+        let mut tuner = AutoTuner::<GBDTModel>::new(self.base_config.clone());
 
         if let Some(config) = &self.tuner_config {
             tuner = tuner.with_config(config.clone());
@@ -225,7 +225,7 @@ impl PyAutoTuner {
         }
 
         // Release GIL during tuning for better performance
-        let result = py.allow_threads(|| tuner.tune(&dataset.inner));
+        let result = py.detach(|| tuner.tune(&dataset.inner));
 
         match result {
             Ok((best_config, history)) => {

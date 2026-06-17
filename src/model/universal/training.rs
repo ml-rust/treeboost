@@ -528,6 +528,8 @@ impl UniversalModel {
     //
     // See: AutoBuilder::train_ltt_ensemble() in src/model/builder.rs for the other copy.
 
+    // reason: kernel/training entry point with many parameters
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn train_linear_then_tree(
         dataset: &BinnedDataset,
         raw_features_opt: Option<&[f32]>,
@@ -589,11 +591,10 @@ impl UniversalModel {
 
         // Calculate actual number of features in raw_features
         // (may differ from num_features if FeatureExtractor was used)
-        let num_raw_features = if num_rows > 0 {
-            raw_features.len() / num_rows
-        } else {
-            num_features
-        };
+        let num_raw_features = raw_features
+            .len()
+            .checked_div(num_rows)
+            .unwrap_or(num_features);
 
         // Determine number of features for linear model
         let num_linear_features = linear_indices
@@ -777,7 +778,7 @@ impl UniversalModel {
                 let mut rng = rand::rngs::StdRng::seed_from_u64(config.seed + seed_offset as u64);
                 let bootstrap_indices: Vec<usize> = (0..num_rows)
                     .map(|_| {
-                        use rand::Rng;
+                        use rand::RngExt;
                         rng.random_range(0..num_rows)
                     })
                     .collect();
@@ -884,11 +885,10 @@ impl UniversalModel {
 
         // Extract raw features for linear models
         let raw_features = Self::extract_raw_features(dataset);
-        let num_raw_features = if num_rows > 0 {
-            raw_features.len() / num_rows
-        } else {
-            num_features
-        };
+        let num_raw_features = raw_features
+            .len()
+            .checked_div(num_rows)
+            .unwrap_or(num_features);
 
         // =====================================================================
         // Phase 1: Fit N LinearBoosters (one per label)

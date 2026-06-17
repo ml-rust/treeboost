@@ -43,8 +43,8 @@ impl GpuDevice {
             .await
             .ok()?;
 
-        // Adapter info for debugging
-        let _info = adapter.get_info();
+        // Adapter info (also exposes subgroup size range in wgpu 29+)
+        let info = adapter.get_info();
 
         // Get device limits
         let limits = adapter.limits();
@@ -76,9 +76,9 @@ impl GpuDevice {
             Err(_) => return None,
         };
 
-        // Get subgroup size limits from adapter limits
+        // Get subgroup size range from adapter info (moved off Limits in wgpu 29)
         let (min_subgroup_size, max_subgroup_size) = if subgroups_supported {
-            (limits.min_subgroup_size, limits.max_subgroup_size)
+            (info.subgroup_min_size, info.subgroup_max_size)
         } else {
             (0, 0)
         };
@@ -210,7 +210,7 @@ impl GpuDevice {
     /// Reads only the first `output.len()` elements from the staging buffer.
     /// Useful when the actual data size is smaller than the buffer capacity.
     pub fn read_buffer_partial<T: bytemuck::Pod>(&self, staging: &Buffer, output: &mut [T]) {
-        let byte_size = (output.len() * std::mem::size_of::<T>()) as u64;
+        let byte_size = std::mem::size_of_val(output) as u64;
         let slice = staging.slice(..byte_size);
         slice.map_async(wgpu::MapMode::Read, |_| {});
         let _ = self.device.poll(wgpu::PollType::Wait {
@@ -274,7 +274,7 @@ impl GpuDevice {
 
     /// Get maximum storage buffer binding size.
     pub fn max_storage_buffer_size(&self) -> u64 {
-        self.limits.max_storage_buffer_binding_size as u64
+        self.limits.max_storage_buffer_binding_size
     }
 }
 

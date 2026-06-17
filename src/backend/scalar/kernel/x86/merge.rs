@@ -124,6 +124,8 @@ pub unsafe fn subtract_histogram_counts_avx2(
 }
 
 #[cfg(test)]
+// reason: index loops mirror the SIMD kernel layout under test.
+#[allow(clippy::needless_range_loop)]
 mod tests {
     use super::*;
 

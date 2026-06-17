@@ -145,7 +145,7 @@ impl PyOrderedTargetEncoder {
 ///
 /// Provides a lightweight encoding lookup that can be saved
 /// and used for inference without the full encoder state.
-#[pyclass(name = "EncodingMap")]
+#[pyclass(from_py_object, name = "EncodingMap")]
 #[derive(Clone)]
 pub struct PyEncodingMap {
     inner: EncodingMap,

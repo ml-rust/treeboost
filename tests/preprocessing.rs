@@ -80,7 +80,7 @@ fn test_preprocessing_minmax_scaler() {
 
     // Verify all values in [0, 1]
     for &v in &transformed {
-        assert!(v >= 0.0 && v <= 1.0, "Value {} not in [0, 1]", v);
+        assert!((0.0..=1.0).contains(&v), "Value {} not in [0, 1]", v);
     }
 
     // Verify min and max values
@@ -164,7 +164,7 @@ fn test_preprocessing_frequency_encoder_workflow() {
     let categories = vec!["apple", "banana", "apple", "cherry", "apple", "banana"];
 
     let mut encoder = FrequencyEncoder::new().with_normalize(true);
-    let _ = encoder.fit(&categories);
+    encoder.fit(&categories);
 
     assert!(encoder.is_fitted());
     assert_eq!(encoder.num_categories(), 3);
@@ -189,7 +189,7 @@ fn test_preprocessing_label_encoder_roundtrip() {
     let categories = vec!["red", "green", "blue", "red", "green"];
 
     let mut encoder = LabelEncoder::new();
-    let _ = encoder.fit(&categories);
+    encoder.fit(&categories);
 
     let labels = encoder
         .transform(&categories)

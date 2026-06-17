@@ -80,7 +80,7 @@ fn main() {
     println!();
 
     // Simulate ordered target encoding
-    let training_data = vec![
+    let training_data = [
         ("cat_a", 1.2),
         ("cat_b", 2.5),
         ("cat_a", 1.8),
@@ -93,7 +93,7 @@ fn main() {
     let mut encodings: std::collections::HashMap<&str, Vec<f32>> = std::collections::HashMap::new();
 
     for (i, (cat, target)) in training_data.iter().enumerate() {
-        encodings.entry(cat).or_insert_with(Vec::new).push(*target);
+        encodings.entry(cat).or_default().push(*target);
         let mean_so_far = encodings[cat].iter().sum::<f32>() / encodings[cat].len() as f32;
         println!(
             "     Row {}: category='{}', target={:.1}, encoding (mean so far)={:.4}",

@@ -49,7 +49,7 @@ pub fn column_to_f32(column: &Column) -> Result<Vec<f32>, TreeBoostError> {
         .map_err(|e| TreeBoostError::Data(format!("Cannot get f64 ChunkedArray: {}", e)))?;
 
     Ok(ca
-        .into_iter()
+        .iter()
         .map(|opt| opt.map(|v| v as f32).unwrap_or(f32::NAN))
         .collect())
 }
@@ -75,10 +75,7 @@ pub fn column_to_strings(column: &Column) -> Result<Vec<String>, TreeBoostError>
         .str()
         .map_err(|e| TreeBoostError::Data(format!("Cannot get str ChunkedArray: {}", e)))?;
 
-    Ok(ca
-        .into_iter()
-        .map(|opt| opt.unwrap_or("").to_string())
-        .collect())
+    Ok(ca.iter().map(|opt| opt.unwrap_or("").to_string()).collect())
 }
 
 /// Convert a Polars Series to `Vec<f32>`
@@ -211,7 +208,7 @@ pub fn features_to_df(
         })
         .collect();
 
-    DataFrame::new(columns)
+    DataFrame::new_infer_height(columns)
         .map_err(|e| TreeBoostError::Data(format!("Failed to create DataFrame: {}", e)))
 }
 
@@ -349,10 +346,13 @@ mod tests {
 
     #[test]
     fn test_df_to_features() {
-        let df = DataFrame::new(vec![
-            Series::new("a".into(), vec![1.0f64, 2.0, 3.0]).into(),
-            Series::new("b".into(), vec![4.0f64, 5.0, 6.0]).into(),
-        ])
+        let df = DataFrame::new(
+            3,
+            vec![
+                Series::new("a".into(), vec![1.0f64, 2.0, 3.0]).into(),
+                Series::new("b".into(), vec![4.0f64, 5.0, 6.0]).into(),
+            ],
+        )
         .unwrap();
 
         let (data, num_features) = df_to_features(&df, &["a", "b"]).unwrap();
@@ -378,10 +378,13 @@ mod tests {
 
     #[test]
     fn test_df_to_target() {
-        let df = DataFrame::new(vec![
-            Series::new("feature".into(), vec![1.0f64, 2.0]).into(),
-            Series::new("target".into(), vec![10.0f64, 20.0]).into(),
-        ])
+        let df = DataFrame::new(
+            2,
+            vec![
+                Series::new("feature".into(), vec![1.0f64, 2.0]).into(),
+                Series::new("target".into(), vec![10.0f64, 20.0]).into(),
+            ],
+        )
         .unwrap();
 
         let target = df_to_target(&df, "target").unwrap();
@@ -390,12 +393,15 @@ mod tests {
 
     #[test]
     fn test_split_by_dtype() {
-        let df = DataFrame::new(vec![
-            Series::new("num1".into(), vec![1.0f64, 2.0]).into(),
-            Series::new("num2".into(), vec![3i32, 4]).into(),
-            Series::new("cat1".into(), vec!["a", "b"]).into(),
-            Series::new("target".into(), vec![1.0f64, 2.0]).into(),
-        ])
+        let df = DataFrame::new(
+            2,
+            vec![
+                Series::new("num1".into(), vec![1.0f64, 2.0]).into(),
+                Series::new("num2".into(), vec![3i32, 4]).into(),
+                Series::new("cat1".into(), vec!["a", "b"]).into(),
+                Series::new("target".into(), vec![1.0f64, 2.0]).into(),
+            ],
+        )
         .unwrap();
 
         let (numeric, categorical) = split_by_dtype(&df, &["target"]);
@@ -429,10 +435,13 @@ mod tests {
     #[test]
     fn test_roundtrip() {
         // DataFrame -> features -> DataFrame roundtrip
-        let original = DataFrame::new(vec![
-            Series::new("x".into(), vec![1.0f64, 2.0, 3.0]).into(),
-            Series::new("y".into(), vec![4.0f64, 5.0, 6.0]).into(),
-        ])
+        let original = DataFrame::new(
+            3,
+            vec![
+                Series::new("x".into(), vec![1.0f64, 2.0, 3.0]).into(),
+                Series::new("y".into(), vec![4.0f64, 5.0, 6.0]).into(),
+            ],
+        )
         .unwrap();
 
         let (data, num_features) = df_to_features(&original, &["x", "y"]).unwrap();

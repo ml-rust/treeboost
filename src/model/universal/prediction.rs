@@ -56,11 +56,10 @@ impl UniversalModel {
                         .unwrap_or_else(|| Self::extract_raw_features(dataset));
 
                     // Calculate actual number of raw features from array size
-                    let num_raw_features = if num_rows > 0 {
-                        raw_features_full.len() / num_rows
-                    } else {
-                        self.num_features // Fallback
-                    };
+                    let num_raw_features = raw_features_full
+                        .len()
+                        .checked_div(num_rows)
+                        .unwrap_or(self.num_features); // Fallback
 
                     // Filter features for linear model if indices are specified
                     let (raw_features, num_linear_features) =
@@ -175,11 +174,10 @@ impl UniversalModel {
                 if let Some(ref linear) = self.linear_booster {
                     // Calculate actual number of features in raw_features array
                     // (may differ from self.num_features if FeatureExtractor was used)
-                    let num_raw_features = if num_rows > 0 {
-                        raw_features.len() / num_rows
-                    } else {
-                        self.num_features
-                    };
+                    let num_raw_features = raw_features
+                        .len()
+                        .checked_div(num_rows)
+                        .unwrap_or(self.num_features);
 
                     let num_lin_feats = self.num_linear_features.unwrap_or(num_raw_features);
 
@@ -251,11 +249,10 @@ impl UniversalModel {
 
         // Add only linear contribution (no trees)
         if let Some(ref linear) = self.linear_booster {
-            let num_raw_features = if num_rows > 0 {
-                raw_features.len() / num_rows
-            } else {
-                self.num_features
-            };
+            let num_raw_features = raw_features
+                .len()
+                .checked_div(num_rows)
+                .unwrap_or(self.num_features);
 
             let num_lin_feats = self.num_linear_features.unwrap_or(num_raw_features);
 
@@ -747,11 +744,7 @@ impl UniversalModel {
             let num_outputs = linear_boosters.len();
 
             // Get base predictions per label
-            let base_preds = self
-                .base_predictions_multi
-                .as_ref()
-                .map(|v| v.as_slice())
-                .unwrap_or(&[]);
+            let base_preds = self.base_predictions_multi.as_deref().unwrap_or(&[]);
 
             // Get raw features from dataset (packed during pipeline processing)
             let raw_features_full = dataset
@@ -760,11 +753,10 @@ impl UniversalModel {
                 .unwrap_or_else(|| Self::extract_raw_features(dataset));
 
             // Calculate actual number of raw features from array size
-            let num_raw_feats_total = if num_rows > 0 {
-                raw_features_full.len() / num_rows
-            } else {
-                self.num_features // Fallback
-            };
+            let num_raw_feats_total = raw_features_full
+                .len()
+                .checked_div(num_rows)
+                .unwrap_or(self.num_features); // Fallback
 
             // Filter features for linear model if indices are specified
             let (raw_features, num_raw_features) =
@@ -804,7 +796,7 @@ impl UniversalModel {
                 vec![vec![0.0; num_rows]; num_outputs]
             };
 
-            for i in 0..num_rows {
+            for (i, row_predictions) in predictions.iter_mut().enumerate() {
                 for k in 0..num_outputs {
                     // Base prediction for this label
                     let base = base_preds.get(k).copied().unwrap_or(0.0);
@@ -820,7 +812,7 @@ impl UniversalModel {
                         .copied()
                         .unwrap_or(0.0);
 
-                    predictions[i][k] = base + shrinkage * linear_pred + tree_contrib;
+                    row_predictions[k] = base + shrinkage * linear_pred + tree_contrib;
                 }
             }
 

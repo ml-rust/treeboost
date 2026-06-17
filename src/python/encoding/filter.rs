@@ -225,7 +225,7 @@ impl PyCategoryFilter {
 ///
 /// Provides a serializable mapping from categories to indices.
 /// Uses binary search for efficient lookup.
-#[pyclass(name = "CategoryMapping")]
+#[pyclass(from_py_object, name = "CategoryMapping")]
 #[derive(Clone)]
 pub struct PyCategoryMapping {
     inner: CategoryMapping,

@@ -421,7 +421,7 @@ impl PartitionKernel {
         // Launch partition kernel
         let config = LaunchConfig {
             block_dim: (256, 1, 1),
-            grid_dim: (((num_indices + 255) / 256) as u32, 1, 1),
+            grid_dim: (num_indices.div_ceil(256) as u32, 1, 1),
             shared_mem_bytes: 0,
         };
         unsafe {
@@ -545,7 +545,7 @@ impl PartitionKernel {
         let stream = self.device.stream();
 
         // Zero counters
-        let zero_blocks = ((num_counters + 255) / 256) as u32;
+        let zero_blocks = num_counters.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks.max(1), 1, 1),
@@ -564,7 +564,7 @@ impl PartitionKernel {
         // Launch batched partition kernel
         // Grid: (num_nodes, row_tiles)
         let threads_per_block = 256u32;
-        let row_tiles = ((max_node_rows as u32) + threads_per_block - 1) / threads_per_block;
+        let row_tiles = (max_node_rows as u32).div_ceil(threads_per_block);
 
         let config = LaunchConfig {
             block_dim: (threads_per_block, 1, 1),
@@ -692,7 +692,7 @@ impl PartitionKernel {
         let stream = self.device.stream();
 
         // Zero counters
-        let zero_blocks = ((num_counters + 255) / 256) as u32;
+        let zero_blocks = num_counters.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks.max(1), 1, 1),
@@ -710,7 +710,7 @@ impl PartitionKernel {
 
         // Launch GPU-resident partition kernel
         let threads_per_block = 256u32;
-        let row_tiles = ((max_node_rows as u32) + threads_per_block - 1) / threads_per_block;
+        let row_tiles = (max_node_rows as u32).div_ceil(threads_per_block);
 
         let config = LaunchConfig {
             block_dim: (threads_per_block, 1, 1),
@@ -912,7 +912,7 @@ impl PartitionKernel {
         let stream = self.device.stream();
 
         // Zero counters
-        let zero_blocks = ((num_counters + 255) / 256) as u32;
+        let zero_blocks = num_counters.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks.max(1), 1, 1),
@@ -935,7 +935,7 @@ impl PartitionKernel {
             .max()
             .unwrap_or(0);
         let threads_per_block = 256u32;
-        let row_tiles = ((max_node_rows as u32) + threads_per_block - 1) / threads_per_block;
+        let row_tiles = (max_node_rows as u32).div_ceil(threads_per_block);
 
         let config = LaunchConfig {
             block_dim: (threads_per_block, 1, 1),

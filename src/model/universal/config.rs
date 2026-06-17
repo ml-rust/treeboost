@@ -402,7 +402,7 @@ impl UniversalConfig {
     }
 
     pub fn with_validation_ratio(mut self, ratio: f32) -> Result<Self> {
-        if ratio < 0.0 || ratio > 0.5 {
+        if !(0.0..=0.5).contains(&ratio) {
             return Err(TreeBoostError::Config(format!(
                 "validation_ratio must be in [0, 0.5], got {}",
                 ratio
@@ -419,13 +419,13 @@ impl UniversalConfig {
 
     /// Enable conformal calibration for uncertainty estimates.
     pub fn with_conformal_calibration(mut self, ratio: f32, quantile: f32) -> Result<Self> {
-        if ratio < 0.0 || ratio > 0.5 {
+        if !(0.0..=0.5).contains(&ratio) {
             return Err(TreeBoostError::Config(format!(
                 "calibration_ratio must be in [0, 0.5], got {}",
                 ratio
             )));
         }
-        if quantile < 0.5 || quantile > 0.99 {
+        if !(0.5..=0.99).contains(&quantile) {
             return Err(TreeBoostError::Config(format!(
                 "conformal_quantile must be in [0.5, 0.99], got {}",
                 quantile

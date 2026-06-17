@@ -172,14 +172,11 @@ fn tune_tree_model(
             .with_min_samples_leaf(5)
             .with_seed(42)
             .with_backend(backend_type),
-        TaskType::MultiClassification { num_classes } => {
-            let cfg = GBDTConfig::new()
-                .with_multiclass_logloss(*num_classes)?
-                .with_min_samples_leaf(5)
-                .with_seed(42)
-                .with_backend(backend_type);
-            cfg
-        }
+        TaskType::MultiClassification { num_classes } => GBDTConfig::new()
+            .with_multiclass_logloss(*num_classes)?
+            .with_min_samples_leaf(5)
+            .with_seed(42)
+            .with_backend(backend_type),
     };
 
     // Determine task type:

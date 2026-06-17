@@ -301,7 +301,7 @@ impl DriftHistory {
 
         // Sort by frequency
         self.frequently_drifted_features
-            .sort_by(|a, b| b.1.cmp(&a.1));
+            .sort_by_key(|b| std::cmp::Reverse(b.1));
     }
 
     /// Get drift rate (fraction of updates with drift)

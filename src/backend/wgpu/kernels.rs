@@ -393,7 +393,7 @@ impl HistogramKernel {
 
         let indices_u32: Vec<u32> = row_indices.iter().map(|&i| i as u32).collect();
 
-        let bins_aligned = bins_row_major.len() % 4 == 0;
+        let bins_aligned = bins_row_major.len().is_multiple_of(4);
         let bins_packed_owned: Vec<u32>;
         let bins_packed: &[u32] = if bins_aligned {
             bytemuck::cast_slice(bins_row_major)
@@ -534,7 +534,7 @@ impl HistogramKernel {
             pass.set_pipeline(&self.pipeline_zero);
             pass.set_bind_group(0, &bind_group_zero, &[]);
             let total_bins = (num_features * 256) as u32;
-            let workgroups = (total_bins + 255) / 256;
+            let workgroups = total_bins.div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -648,7 +648,7 @@ impl HistogramKernel {
         let indices_u32: Vec<u32> = row_indices.iter().map(|&i| i as u32).collect();
 
         // For bins, try zero-copy cast if aligned, else pack
-        let bins_aligned = bins_row_major.len() % 4 == 0;
+        let bins_aligned = bins_row_major.len().is_multiple_of(4);
         let bins_packed_owned: Vec<u32>;
         let bins_packed: &[u32] = if bins_aligned {
             // Zero-copy: interpret bytes directly as u32s
@@ -816,7 +816,7 @@ impl HistogramKernel {
             pass.set_pipeline(&self.pipeline_zero);
             pass.set_bind_group(0, &bind_group_zero, &[]);
             let total_bins = (num_features * 256) as u32;
-            let workgroups = (total_bins + 255) / 256;
+            let workgroups = total_bins.div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -941,7 +941,7 @@ impl HistogramKernel {
         let indices_u32: Vec<u32> = row_indices.iter().map(|&i| i as u32).collect();
 
         // Pack 4-bit bins for GPU (already nibble-packed, just need u32 alignment)
-        let bins_aligned = bins_4bit.len() % 4 == 0;
+        let bins_aligned = bins_4bit.len().is_multiple_of(4);
         let bins_packed_owned: Vec<u32>;
         let bins_packed: &[u32] = if bins_aligned {
             bytemuck::cast_slice(bins_4bit)
@@ -1101,7 +1101,7 @@ impl HistogramKernel {
             pass.set_pipeline(&self.pipeline_zero_4bit);
             pass.set_bind_group(0, &bind_group_zero, &[]);
             let total_bins = (num_features * 256) as u32;
-            let workgroups = (total_bins + 255) / 256;
+            let workgroups = total_bins.div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -1222,7 +1222,7 @@ impl HistogramKernel {
 
         // Pack bins
         let t = Instant::now();
-        let bins_aligned = bins_row_major.len() % 4 == 0;
+        let bins_aligned = bins_row_major.len().is_multiple_of(4);
         let bins_packed_owned: Vec<u32>;
         let bins_packed: &[u32] = if bins_aligned {
             bytemuck::cast_slice(bins_row_major)
@@ -1395,7 +1395,7 @@ impl HistogramKernel {
             pass.set_pipeline(&self.pipeline_zero);
             pass.set_bind_group(0, &bind_group_zero, &[]);
             let total_bins = (num_features * 256) as u32;
-            let workgroups = (total_bins + 255) / 256;
+            let workgroups = total_bins.div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -1599,7 +1599,7 @@ impl HistogramKernel {
         }
 
         // For bins, try zero-copy cast if aligned, else pack
-        let bins_aligned = bins_row_major.len() % 4 == 0;
+        let bins_aligned = bins_row_major.len().is_multiple_of(4);
         let bins_packed_owned: Vec<u32>;
         let bins_packed: &[u32] = if bins_aligned {
             bytemuck::cast_slice(bins_row_major)
@@ -1781,7 +1781,7 @@ impl HistogramKernel {
             pass.set_pipeline(&self.pipeline_zero_batched);
             pass.set_bind_group(0, &bind_group_zero, &[]);
             let total_bins = (num_batches * num_features * 256) as u32;
-            let workgroups = (total_bins + 255) / 256;
+            let workgroups = total_bins.div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -1894,6 +1894,8 @@ impl HistogramKernel {
     ///
     /// # Returns
     /// 2D vector of histograms: `[num_eras][num_features]`
+    // reason: kernel/training entry point with many parameters
+    #[allow(clippy::too_many_arguments)]
     pub fn build_era_histograms(
         &self,
         bins_row_major: &[u8],
@@ -1930,7 +1932,7 @@ impl HistogramKernel {
             .collect();
 
         // Pack bins
-        let bins_aligned = bins_row_major.len() % 4 == 0;
+        let bins_aligned = bins_row_major.len().is_multiple_of(4);
         let bins_packed_owned: Vec<u32>;
         let bins_packed: &[u32] = if bins_aligned {
             bytemuck::cast_slice(bins_row_major)
@@ -2110,7 +2112,7 @@ impl HistogramKernel {
             pass.set_pipeline(&self.pipeline_zero_era);
             pass.set_bind_group(0, &bind_group_zero, &[]);
             let total_bins = (num_eras * num_features * 256) as u32;
-            let workgroups = (total_bins + 255) / 256;
+            let workgroups = total_bins.div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -2207,7 +2209,7 @@ impl HistogramKernel {
 
 /// Pack u8 bins into u32 array (4 bytes per u32).
 fn pack_bins_u32(bins: &[u8]) -> Vec<u32> {
-    let mut packed = vec![0u32; (bins.len() + 3) / 4];
+    let mut packed = vec![0u32; bins.len().div_ceil(4)];
     for (i, &bin) in bins.iter().enumerate() {
         let word_idx = i / 4;
         let byte_idx = i % 4;

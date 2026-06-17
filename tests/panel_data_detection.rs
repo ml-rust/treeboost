@@ -71,12 +71,12 @@ fn test_panel_data_detection_with_datapipeline() {
         assert_ne!(eras[3], eras[4]);
 
         // Verify first 4 rows are era 0
-        for i in 0..4 {
-            assert_eq!(eras[i], 0, "First 4 rows should be era 0");
+        for &era in &eras[0..4] {
+            assert_eq!(era, 0, "First 4 rows should be era 0");
         }
         // Verify next 4 rows are era 1
-        for i in 4..8 {
-            assert_eq!(eras[i], 1, "Rows 4-7 should be era 1");
+        for &era in &eras[4..8] {
+            assert_eq!(era, 1, "Rows 4-7 should be era 1");
         }
     }
 

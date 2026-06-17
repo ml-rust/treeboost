@@ -1260,11 +1260,11 @@ mod tests {
         // Verify row-major format: [row0_feat0, row0_feat1, row1_feat0, row1_feat1, ...]
         // Row 0: (0, 10), Row 1: (1, 11), Row 2: (2, 12), Row 3: (3, 13)
         assert_eq!(row_major.len(), num_rows * num_features);
-        assert_eq!(row_major[0 * num_features + 0], 0); // row 0, feature 0
-        assert_eq!(row_major[0 * num_features + 1], 10); // row 0, feature 1
-        assert_eq!(row_major[1 * num_features + 0], 1); // row 1, feature 0
-        assert_eq!(row_major[1 * num_features + 1], 11); // row 1, feature 1
-        assert_eq!(row_major[3 * num_features + 0], 3); // row 3, feature 0
+        assert_eq!(row_major[0], 0); // row 0, feature 0
+        assert_eq!(row_major[1], 10); // row 0, feature 1
+        assert_eq!(row_major[num_features], 1); // row 1, feature 0
+        assert_eq!(row_major[num_features + 1], 11); // row 1, feature 1
+        assert_eq!(row_major[3 * num_features], 3); // row 3, feature 0
         assert_eq!(row_major[3 * num_features + 1], 13); // row 3, feature 1
 
         // Verify caching (second call returns same data)

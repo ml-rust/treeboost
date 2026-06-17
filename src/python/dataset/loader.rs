@@ -82,8 +82,7 @@ impl PyDatasetLoader {
             .as_ref()
             .map(|v| v.iter().map(|s| s.as_str()).collect());
 
-        let result =
-            py.allow_threads(|| self.inner.load_csv(path, target, feature_refs.as_deref()));
+        let result = py.detach(|| self.inner.load_csv(path, target, feature_refs.as_deref()));
 
         match result {
             Ok(dataset) => Ok(PyBinnedDataset::from(dataset)),
@@ -115,7 +114,7 @@ impl PyDatasetLoader {
             .as_ref()
             .map(|v| v.iter().map(|s| s.as_str()).collect());
 
-        let result = py.allow_threads(|| {
+        let result = py.detach(|| {
             self.inner
                 .load_parquet(path, target, feature_refs.as_deref())
         });
@@ -139,6 +138,7 @@ impl PyDatasetLoader {
     /// Returns:
     ///     BinnedDataset with quantile-binned features
     #[pyo3(signature = (features, targets, feature_names=None))]
+    #[allow(clippy::wrong_self_convention)] // reason: name fixed by Python API
     fn from_numpy<'py>(
         &self,
         features: PyReadonlyArray2<'py, f64>,
@@ -182,18 +182,19 @@ impl PyDatasetLoader {
         let mut all_binned: Vec<Vec<u8>> = Vec::with_capacity(num_features);
         let mut all_info: Vec<FeatureInfo> = Vec::with_capacity(num_features);
 
-        for f in 0..num_features {
+        for (f, name) in names.iter().enumerate() {
             // Extract column
             let col: Vec<f64> = features_arr.column(f).to_vec();
 
-            let (binned, info) = binner
-                .process_numeric_column(names[f].clone(), &col)
-                .map_err(|e| {
-                    pyo3::exceptions::PyRuntimeError::new_err(format!(
-                        "Failed to process column '{}': {}",
-                        names[f], e
-                    ))
-                })?;
+            let (binned, info) =
+                binner
+                    .process_numeric_column(name.clone(), &col)
+                    .map_err(|e| {
+                        pyo3::exceptions::PyRuntimeError::new_err(format!(
+                            "Failed to process column '{}': {}",
+                            names[f], e
+                        ))
+                    })?;
 
             all_binned.push(binned);
             all_info.push(info);
@@ -233,7 +234,7 @@ impl PyDatasetLoader {
     ) -> PyResult<PyBinnedDataset> {
         let info_vec: Vec<FeatureInfo> = feature_info.into_iter().map(|fi| fi.into()).collect();
 
-        let result = py.allow_threads(|| self.inner.load_csv_for_prediction(path, &info_vec));
+        let result = py.detach(|| self.inner.load_csv_for_prediction(path, &info_vec));
 
         match result {
             Ok(dataset) => Ok(PyBinnedDataset::from(dataset)),
@@ -262,7 +263,7 @@ impl PyDatasetLoader {
     ) -> PyResult<PyBinnedDataset> {
         let info_vec: Vec<FeatureInfo> = feature_info.into_iter().map(|fi| fi.into()).collect();
 
-        let result = py.allow_threads(|| self.inner.load_parquet_for_prediction(path, &info_vec));
+        let result = py.detach(|| self.inner.load_parquet_for_prediction(path, &info_vec));
 
         match result {
             Ok(dataset) => Ok(PyBinnedDataset::from(dataset)),

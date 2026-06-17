@@ -217,7 +217,7 @@ impl UniversalModel {
                 // Bootstrap sample
                 let bootstrap_indices: Vec<usize> = (0..num_rows)
                     .map(|_| {
-                        use rand::Rng;
+                        use rand::RngExt;
                         rng.random_range(0..num_rows)
                     })
                     .collect();

@@ -156,7 +156,7 @@ impl MultiLabelLogLoss {
         let num_rows = targets.len() / num_outputs;
         let mut initial = vec![0.0; num_outputs];
 
-        for output_idx in 0..num_outputs {
+        for (output_idx, init) in initial.iter_mut().enumerate() {
             // Count positives for this label
             let mut positive_count = 0.0;
             for row in 0..num_rows {
@@ -168,7 +168,7 @@ impl MultiLabelLogLoss {
 
             // Compute log-odds
             let p = (positive_count / num_rows as f32).clamp(self.eps, 1.0 - self.eps);
-            initial[output_idx] = (p / (1.0 - p)).ln();
+            *init = (p / (1.0 - p)).ln();
         }
 
         initial
@@ -253,9 +253,9 @@ impl MultiLabelLogLoss {
         let mut labels = vec![0.0; probabilities.len()];
 
         for row in 0..num_rows {
-            for output_idx in 0..num_outputs {
+            for (output_idx, &threshold) in thresholds.iter().enumerate() {
                 let idx = row * num_outputs + output_idx;
-                labels[idx] = if probabilities[idx] >= thresholds[output_idx] {
+                labels[idx] = if probabilities[idx] >= threshold {
                     1.0
                 } else {
                     0.0

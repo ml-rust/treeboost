@@ -318,10 +318,10 @@ mod tests {
 
         let batch_preds = model.predict(&dataset);
 
-        for row_idx in 0..dataset.num_rows().min(10) {
+        for (row_idx, &batch_pred) in batch_preds.iter().take(10).enumerate() {
             let single_pred = model.predict_row(&dataset, row_idx);
             assert!(
-                (single_pred - batch_preds[row_idx]).abs() < 1e-5,
+                (single_pred - batch_pred).abs() < 1e-5,
                 "Single-row and batch predictions should match"
             );
         }

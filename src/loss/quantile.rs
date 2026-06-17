@@ -255,6 +255,6 @@ mod tests {
 
         // 25th percentile should be close to 2
         let init = loss.initial_prediction(&targets);
-        assert!(init >= 1.0 && init <= 3.0);
+        assert!((1.0..=3.0).contains(&init));
     }
 }

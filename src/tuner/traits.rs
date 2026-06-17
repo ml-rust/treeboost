@@ -302,10 +302,10 @@ mod tests {
 
     #[test]
     fn test_param_value_numeric() {
-        let v = ParamValue::Numeric(3.14);
+        let v = ParamValue::Numeric(2.5);
         assert!(v.is_numeric());
         assert!(!v.is_categorical());
-        assert!((v.as_numeric() - 3.14).abs() < 1e-6);
+        assert!((v.as_numeric() - 2.5).abs() < 1e-6);
         assert!(v.as_categorical().is_none());
     }
 
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_param_value_from() {
-        let v1: ParamValue = 3.14f32.into();
+        let v1: ParamValue = 2.5f32.into();
         assert!(v1.is_numeric());
 
         let v2: ParamValue = "LinearThenTree".into();

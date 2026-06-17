@@ -282,11 +282,10 @@ impl UniversalModel {
             .clone()
             .unwrap_or_else(|| Self::extract_raw_features(dataset));
 
-        let num_raw_features = if num_rows > 0 {
-            raw_features.len() / num_rows
-        } else {
-            self.num_features
-        };
+        let num_raw_features = raw_features
+            .len()
+            .checked_div(num_rows)
+            .unwrap_or(self.num_features);
 
         // Extract selected features if feature selection was used
         let linear_features = crate::features::extract_selected_features(
@@ -357,8 +356,8 @@ impl UniversalModel {
 
             // Add intercept if present (Ridge stacking)
             if let Some(intercept) = self.stacker_intercept {
-                for i in 0..num_rows {
-                    combined[i] += intercept;
+                for value in combined.iter_mut() {
+                    *value += intercept;
                 }
             }
 
@@ -381,6 +380,7 @@ impl UniversalModel {
     /// Train multi-seed GBDT ensemble and fit stacker
     ///
     /// Returns (None, Some(ensemble), Some(weights), Some(intercept))
+    #[allow(clippy::type_complexity)] // reason: complex return tuple kept inline
     pub(super) fn train_gbdt_ensemble(
         dataset: &BinnedDataset,
         config: &UniversalConfig,

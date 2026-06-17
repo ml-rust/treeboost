@@ -324,8 +324,7 @@ impl StandardScaler {
             self.stds = vec![1.0; num_features];
             self.welford_states = vec![WelfordState::new(); num_features];
 
-            for feat in 0..num_features {
-                let (mean, var) = batch_stats[feat];
+            for (feat, &(mean, var)) in batch_stats.iter().enumerate() {
                 self.means[feat] = mean as f32;
                 let std = var.sqrt() as f32;
                 self.stds[feat] = if std < 1e-8 { 1.0 } else { std };
@@ -353,9 +352,7 @@ impl StandardScaler {
         let alpha_64 = alpha as f64;
         let decay = 1.0 - alpha_64;
 
-        for feat in 0..num_features {
-            let (batch_mean, batch_var) = batch_stats[feat];
-
+        for (feat, &(batch_mean, batch_var)) in batch_stats.iter().enumerate() {
             // Update mean via EMA
             let old_mean = self.means[feat] as f64;
             let new_mean = decay * old_mean + alpha_64 * batch_mean;

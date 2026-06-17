@@ -1,4 +1,7 @@
 //! Shared test utilities for TreeBoost integration tests
+// reason: each integration test file is its own crate; some helpers are
+// only used by a subset of them, so they appear unused per-crate.
+#![allow(dead_code)]
 
 use polars::prelude::*;
 use treeboost::dataset::{BinnedDataset, FeatureInfo, FeatureType};
@@ -219,7 +222,7 @@ pub fn generate_multiclass_data(
     imbalance: Vec<f64>,
     seed: u64,
 ) -> Result<DataFrame> {
-    if num_classes < 2 || num_classes > 10 {
+    if !(2..=10).contains(&num_classes) {
         return Err(treeboost::TreeBoostError::Config(
             "num_classes must be between 2 and 10".to_string(),
         ));
@@ -323,7 +326,7 @@ pub fn generate_multilabel_data(
     correlations: Vec<(usize, usize)>,
     seed: u64,
 ) -> Result<DataFrame> {
-    if num_labels < 2 || num_labels > 10 {
+    if !(2..=10).contains(&num_labels) {
         return Err(treeboost::TreeBoostError::Config(
             "num_labels must be between 2 and 10".to_string(),
         ));
@@ -377,7 +380,7 @@ pub fn generate_multilabel_data(
         let mut labels = vec![0; num_labels];
 
         // Base probabilities from features
-        for label_id in 0..num_labels {
+        for (label_id, label) in labels.iter_mut().enumerate() {
             let signal = match label_id {
                 0 => f1 + f2 * 0.5,              // Label 0 depends on f1, f2
                 1 => f2 * 0.8 + f3 * 0.3,        // Label 1 depends on f2, f3
@@ -387,7 +390,7 @@ pub fn generate_multilabel_data(
 
             // Sigmoid to get probability
             let prob = 1.0 / (1.0 + (-signal).exp());
-            labels[label_id] = if next_rand() < prob { 1 } else { 0 };
+            *label = if next_rand() < prob { 1 } else { 0 };
         }
 
         // Apply correlations: if label i is 1 and (i, j) is correlated, increase prob of j
@@ -418,7 +421,7 @@ pub fn generate_multilabel_data(
     // Add label columns
     for (label_id, label_vec) in label_vecs.into_iter().enumerate() {
         let label_series = Series::new(format!("label_{}", label_id).into(), label_vec);
-        let _ = df_builder.with_column(label_series).map_err(|e| {
+        let _ = df_builder.with_column(label_series.into()).map_err(|e| {
             treeboost::TreeBoostError::Config(format!("Failed to add label column: {}", e))
         })?;
     }

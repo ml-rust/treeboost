@@ -12,6 +12,8 @@
 //! - [`PipelineConfig`] - Configuration options
 //! - [`PipelineState`] - Learned state for inference
 
+// reason: renaming the inner module would be invasive; keep the conventional name.
+#[allow(clippy::module_inception)]
 mod pipeline;
 
 pub use pipeline::{CategoricalEncodingState, DataPipeline, PipelineConfig, PipelineState};

@@ -12,7 +12,7 @@ use treeboost::loss::{sigmoid, LossFunction, MseLoss, MultiLabelFocalLoss, Multi
 #[test]
 fn test_multilabel_logloss_gradients() {
     let loss = MultiLabelLogLoss::new();
-    let num_outputs = 3;
+    let _num_outputs = 3;
 
     // Single sample with 3 labels
     // Target: [1, 0, 1]
@@ -132,7 +132,7 @@ fn test_multilabel_batch_gradients() {
 #[test]
 fn test_multilabel_initial_predictions() {
     let loss = MultiLabelLogLoss::new();
-    let num_rows = 4;
+    let _num_rows = 4;
     let num_outputs = 2;
 
     // Targets:
@@ -326,7 +326,7 @@ fn test_focal_loss_alpha_balancing() {
 #[test]
 fn test_focal_batch_gradients() {
     let focal = MultiLabelFocalLoss::new(2.0);
-    let num_rows = 2;
+    let _num_rows = 2;
     let num_outputs = 2;
 
     let targets = vec![1.0, 0.0, 0.0, 1.0];

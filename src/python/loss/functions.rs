@@ -18,7 +18,7 @@ use crate::loss::{
 /// - Gradient: ŷ - y
 /// - Hessian: 1.0 (constant)
 /// - Sensitive to outliers
-#[pyclass(name = "MseLoss")]
+#[pyclass(from_py_object, name = "MseLoss")]
 #[derive(Clone)]
 pub struct PyMseLoss {
     inner: MseLoss,
@@ -69,7 +69,7 @@ impl PyMseLoss {
 ///
 /// Smooth approximation to Huber loss that transitions from L2 to L1 behavior.
 /// More robust to outliers than MSE.
-#[pyclass(name = "PseudoHuberLoss")]
+#[pyclass(from_py_object, name = "PseudoHuberLoss")]
 #[derive(Clone)]
 pub struct PyPseudoHuberLoss {
     inner: PseudoHuberLoss,
@@ -142,7 +142,7 @@ impl PyPseudoHuberLoss {
 ///
 /// L(y, ŷ) = -[y * log(p) + (1-y) * log(1-p)]
 /// where p = sigmoid(ŷ)
-#[pyclass(name = "BinaryLogLoss")]
+#[pyclass(from_py_object, name = "BinaryLogLoss")]
 #[derive(Clone)]
 pub struct PyBinaryLogLoss {
     inner: BinaryLogLoss,
@@ -217,7 +217,7 @@ impl PyBinaryLogLoss {
 ///
 /// For multi-class classification with K classes.
 /// Targets should be class indices: 0, 1, 2, ..., K-1.
-#[pyclass(name = "MultiClassLogLoss")]
+#[pyclass(from_py_object, name = "MultiClassLogLoss")]
 #[derive(Clone)]
 pub struct PyMultiClassLogLoss {
     inner: MultiClassLogLoss,

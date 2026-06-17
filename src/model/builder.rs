@@ -564,7 +564,7 @@ impl AutoBuilder {
             None, // panel_info will be added for time-series features below
         )?;
 
-        if self.config.verbose.enabled() && feature_plan.as_ref().map_or(false, |p| !p.is_empty()) {
+        if self.config.verbose.enabled() && feature_plan.as_ref().is_some_and(|p| !p.is_empty()) {
             let added = working_df.width() - initial_cols;
             let num_poly = feature_plan
                 .as_ref()
@@ -1060,7 +1060,7 @@ impl AutoBuilder {
                     let target_f32: Vec<f32> = target_series
                         .cast(&polars::datatypes::DataType::Float32)?
                         .f32()?
-                        .into_iter()
+                        .iter()
                         .map(|v| v.unwrap_or(0.0))
                         .collect();
 
@@ -1156,10 +1156,8 @@ impl AutoBuilder {
 
             let num_total_features = col_names.len() - 1; // -1 for target
             if num_total_features == 0 {
-                return Err(TreeBoostError::Data(format!(
-                        "LinearThenTree mode requires features for the tree model, but none were found!\n\n\
-                         This should not happen if linear features exist. Please report this as a bug."
-                    )));
+                return Err(TreeBoostError::Data("LinearThenTree mode requires features for the tree model, but none were found!\n\n\
+                         This should not happen if linear features exist. Please report this as a bug.".to_string()));
             }
 
             (
@@ -1381,7 +1379,7 @@ impl AutoBuilder {
             target_transform: target_transform.clone(),
             build_time: start.elapsed(),
             phase_times,
-            validation_dataset: validation_dataset,
+            validation_dataset,
         };
 
         // Auto-save artifacts if model_output_dir is configured

@@ -837,8 +837,8 @@ mod tests {
             let class_1_count = fold.iter().filter(|&&idx| labels[idx] == 1).count();
 
             // With 100 samples, 5 folds, each fold should have ~10 of each class
-            assert!(class_0_count >= 8 && class_0_count <= 12);
-            assert!(class_1_count >= 8 && class_1_count <= 12);
+            assert!((8..=12).contains(&class_0_count));
+            assert!((8..=12).contains(&class_1_count));
         }
     }
 
@@ -854,8 +854,8 @@ mod tests {
             let class_1_count = fold.iter().filter(|&&idx| labels[idx] == 1).count();
 
             // With 90/10 split in 5 folds: ~18 class 0, ~2 class 1 per fold
-            assert!(class_0_count >= 16 && class_0_count <= 20);
-            assert!(class_1_count >= 1 && class_1_count <= 3);
+            assert!((16..=20).contains(&class_0_count));
+            assert!((1..=3).contains(&class_1_count));
         }
     }
 

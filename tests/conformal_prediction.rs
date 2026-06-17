@@ -42,7 +42,7 @@ fn generate_complex_data(
 
     for i in 0..n {
         let v1 = (i as f64 / n as f64) * 10.0 - 5.0; // [-5, 5]
-        let v2 = (i as f64 / n as f64) * 6.28; // [0, 2π]
+        let v2 = (i as f64 / n as f64) * std::f64::consts::TAU; // [0, 2π]
         let v3 = next_rand() * 2.0; // Normal(0, 2)
         let v4 = next_rand() * 2.0; // Normal(0, 2)
         let v5 = next_rand(); // Normal(0, 1)
@@ -138,8 +138,7 @@ fn dataframe_to_binned_with_stats(
     // Create feature info
     let feature_info: Vec<treeboost::dataset::FeatureInfo> = feature_cols
         .iter()
-        .enumerate()
-        .map(|(_i, &name)| treeboost::dataset::FeatureInfo {
+        .map(|&name| treeboost::dataset::FeatureInfo {
             name: name.to_string(),
             feature_type: treeboost::dataset::FeatureType::Numeric,
             num_bins: 255,
@@ -238,7 +237,7 @@ fn test_conformal_coverage_90_percent() -> Result<(), Box<dyn std::error::Error>
 
     // Assertions
     assert!(
-        coverage >= 0.85 && coverage <= 0.95,
+        (0.85..=0.95).contains(&coverage),
         "Coverage should be 85-95% for 90% intervals, got {:.2}%",
         coverage * 100.0
     );
@@ -439,7 +438,7 @@ fn test_conformal_with_noisy_data() -> Result<(), Box<dyn std::error::Error>> {
 
     // Assertions
     assert!(
-        coverage >= 0.85 && coverage <= 0.95,
+        (0.85..=0.95).contains(&coverage),
         "Coverage should be 85-95% even with noise, got {:.2}%",
         coverage * 100.0
     );

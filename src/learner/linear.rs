@@ -286,7 +286,7 @@ impl LinearConfig {
     ///
     /// Returns error if l1_ratio is not in [0.0, 1.0].
     pub fn with_l1_ratio(mut self, l1_ratio: f32) -> Result<Self> {
-        if l1_ratio < 0.0 || l1_ratio > 1.0 {
+        if !(0.0..=1.0).contains(&l1_ratio) {
             return Err(crate::TreeBoostError::Config(format!(
                 "l1_ratio must be in [0, 1], got {}. Use 0.0 for Ridge, 1.0 for LASSO, 0.0-1.0 for Elastic Net",
                 l1_ratio
@@ -366,7 +366,7 @@ impl LinearConfig {
     ///
     /// Returns error if extrapolation_damping is not in [0.0, 1.0].
     pub fn with_extrapolation_damping(mut self, damping: f32) -> Result<Self> {
-        if damping < 0.0 || damping > 1.0 {
+        if !(0.0..=1.0).contains(&damping) {
             return Err(crate::TreeBoostError::Config(format!(
                 "extrapolation_damping must be in [0, 1], got {}",
                 damping
@@ -564,7 +564,7 @@ impl LinearBooster {
     ///
     /// # Arguments
     /// * `update_bias` - If true, recompute bias from data. If false, keep current bias
-    ///                   (for warm start where we want to continue from current state)
+    ///   (for warm start where we want to continue from current state)
     ///
     /// # Returns
     /// Number of iterations actually executed (may be less than max_iter due to convergence)
@@ -1047,7 +1047,7 @@ mod tests {
     fn test_linear_booster_simple_fit() -> Result<()> {
         // Simple linear relationship: y = 2*x + 1
         let features = vec![1.0, 2.0, 3.0, 4.0, 5.0]; // 5 rows, 1 feature
-        let targets = vec![3.0, 5.0, 7.0, 9.0, 11.0];
+        let targets = [3.0, 5.0, 7.0, 9.0, 11.0];
 
         // For gradient boosting, gradients = predictions - targets (for MSE)
         // Initial predictions = 0, so gradients = -targets
@@ -1089,7 +1089,7 @@ mod tests {
             1.0, 2.0, // row 2: y = 1 + 4 = 5
             2.0, 2.0, // row 3: y = 2 + 4 = 6
         ];
-        let targets = vec![3.0, 4.0, 5.0, 6.0];
+        let targets = [3.0, 4.0, 5.0, 6.0];
         let gradients: Vec<f32> = targets.iter().map(|&t| -t).collect();
         let hessians = vec![1.0; 4];
 

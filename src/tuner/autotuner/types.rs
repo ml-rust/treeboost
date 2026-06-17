@@ -30,7 +30,7 @@ pub(super) const BINARY_CLASSIFICATION_THRESHOLD: f32 = 0.5;
 /// 1. Panics are exceptional - normal code paths always clean up
 /// 2. After a panic, the AutoTuner is in an undefined state anyway
 /// 3. The pointers are only accessed through methods that check custom_validation first
-pub(super) struct SendPtr<T>(*const T);
+pub(crate) struct SendPtr<T>(*const T);
 
 unsafe impl<T> Send for SendPtr<T> {}
 unsafe impl<T> Sync for SendPtr<T> {}

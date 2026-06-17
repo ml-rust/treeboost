@@ -53,8 +53,8 @@ pub fn extract_subset(dataset: &BinnedDataset, start_row: usize, end_row: usize)
     let mut features = Vec::with_capacity(n_rows * n_features);
     for f in 0..n_features {
         let col = dataset.feature_column(f);
-        for r in start_row..end_row {
-            features.push(col[r]);
+        for &val in &col[start_row..end_row] {
+            features.push(val);
         }
     }
 

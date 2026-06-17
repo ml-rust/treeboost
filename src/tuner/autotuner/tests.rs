@@ -127,7 +127,7 @@ fn test_autotuner_generate_param_values() {
     let param = ParamDef::new(TunableParam::MaxDepth, ParamBounds::discrete(2, 10), 6.0);
     let values = tuner.generate_param_values(&param, 0.5, 3);
     assert!(!values.is_empty());
-    assert!(values.iter().all(|&v| v >= 2.0 && v <= 10.0));
+    assert!(values.iter().all(|&v| (2.0..=10.0).contains(&v)));
 }
 
 #[test]
@@ -300,14 +300,14 @@ fn test_lhs_bounds_respected() {
     for candidate in &grid {
         let lr = candidate["learning_rate"];
         assert!(
-            lr >= 0.01 && lr <= 0.5,
+            (0.01..=0.5).contains(&lr),
             "learning_rate {} out of bounds [0.01, 0.5]",
             lr
         );
 
         let depth = candidate["max_depth"];
         assert!(
-            depth >= 2.0 && depth <= 12.0,
+            (2.0..=12.0).contains(&depth),
             "max_depth {} out of bounds [2, 12]",
             depth
         );
@@ -431,14 +431,14 @@ fn test_random_bounds_respected() {
     for candidate in &grid {
         let ss = candidate["subsample"];
         assert!(
-            ss >= 0.5 && ss <= 1.0,
+            (0.5..=1.0).contains(&ss),
             "subsample {} out of bounds [0.5, 1.0]",
             ss
         );
 
         let ew = candidate["entropy_weight"];
         assert!(
-            ew >= 0.0 && ew <= 0.5,
+            (0.0..=0.5).contains(&ew),
             "entropy_weight {} out of bounds [0.0, 0.5]",
             ew
         );
@@ -555,9 +555,11 @@ fn test_spread_affects_range() {
 #[test]
 fn test_is_gpu_backend() {
     // Test GPU backends are detected
-    let mut config = GBDTConfig::default();
+    let mut config = GBDTConfig {
+        backend_type: BackendType::Auto,
+        ..Default::default()
+    };
 
-    config.backend_type = BackendType::Auto;
     let tuner = AutoTuner::<GBDTModel>::new(config.clone());
     assert!(
         tuner.is_gpu_backend(),
@@ -589,8 +591,10 @@ fn test_is_gpu_backend() {
 #[test]
 fn test_parallel_config_respected() {
     // Test that parallel_trials setting is respected
-    let mut config = GBDTConfig::default();
-    config.backend_type = BackendType::Scalar; // CPU backend
+    let config = GBDTConfig {
+        backend_type: BackendType::Scalar, // CPU backend
+        ..Default::default()
+    };
 
     let tuner_config = TunerConfig::new().with_parallel(true).with_n_parallel(4);
 

@@ -190,7 +190,7 @@ impl ColumnType {
         match series.dtype() {
             DataType::Int32 => {
                 if let Ok(ca) = series.i32() {
-                    let vals: Vec<Option<i32>> = ca.into_iter().collect();
+                    let vals: Vec<Option<i32>> = ca.iter().collect();
                     for i in 1..vals.len() {
                         if let (Some(a), Some(b)) = (vals[i - 1], vals[i]) {
                             if b <= a {
@@ -205,7 +205,7 @@ impl ColumnType {
             }
             DataType::Int64 => {
                 if let Ok(ca) = series.i64() {
-                    let vals: Vec<Option<i64>> = ca.into_iter().collect();
+                    let vals: Vec<Option<i64>> = ca.iter().collect();
                     for i in 1..vals.len() {
                         if let (Some(a), Some(b)) = (vals[i - 1], vals[i]) {
                             if b <= a {
@@ -220,7 +220,7 @@ impl ColumnType {
             }
             DataType::UInt32 => {
                 if let Ok(ca) = series.u32() {
-                    let vals: Vec<Option<u32>> = ca.into_iter().collect();
+                    let vals: Vec<Option<u32>> = ca.iter().collect();
                     for i in 1..vals.len() {
                         if let (Some(a), Some(b)) = (vals[i - 1], vals[i]) {
                             if b <= a {
@@ -517,7 +517,7 @@ impl FeatureExtractor {
             if should_exclude {
                 excluded_by_type
                     .entry(col_type)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(col_name_str.to_string());
                 continue;
             }
@@ -587,27 +587,9 @@ impl FeatureExtractor {
                 // May overflow on very large values
                 v.min(u32::MAX as u64) as f32
             }
-            AnyValue::Float32(v) => {
-                if v.is_finite() {
-                    v
-                } else {
-                    0.0
-                }
-            }
-            AnyValue::Float64(v) => {
-                if v.is_finite() {
-                    v as f32
-                } else {
-                    0.0
-                }
-            }
-            AnyValue::Boolean(v) => {
-                if v {
-                    1.0
-                } else {
-                    0.0
-                }
-            }
+            AnyValue::Float32(v) if v.is_finite() => v,
+            AnyValue::Float64(v) if v.is_finite() => v as f32,
+            AnyValue::Boolean(v) if v => 1.0,
             _ => 0.0,
         }
     }
@@ -651,7 +633,7 @@ mod tests {
     use super::*;
 
     fn create_test_dataframe() -> DataFrame {
-        let df = df!(
+        df!(
             "id" => &[1i32, 2, 3, 4, 5],
             "year" => &[2020i32, 2021, 2022, 2023, 2024],
             "rank" => &[1i32, 2, 3, 4, 5],
@@ -661,9 +643,7 @@ mod tests {
             "category" => &["A", "B", "A", "B", "A"],
             "target" => &[1.0f32, 2.0, 3.0, 4.0, 5.0],
         )
-        .unwrap();
-
-        df
+        .unwrap()
     }
 
     #[test]
@@ -740,9 +720,9 @@ mod tests {
 
         // Verify row-major ordering
         if num_features >= 2 {
-            let row_0_feat_0 = result.features[0 * num_features + 0];
-            let row_0_feat_1 = result.features[0 * num_features + 1];
-            let row_1_feat_0 = result.features[1 * num_features + 0];
+            let row_0_feat_0 = result.features[0]; // row 0, feature 0
+            let row_0_feat_1 = result.features[1]; // row 0, feature 1
+            let row_1_feat_0 = result.features[num_features];
 
             // Values should match the DataFrame
             assert_eq!(row_0_feat_0, 1.0); // numeric1 row 0
@@ -806,7 +786,7 @@ mod tests {
         let result = extractor.extract_numeric_features(&df, "target").unwrap();
 
         // NaN should be filled with 0
-        assert_eq!(result.features[1 * result.num_features], 0.0);
+        assert_eq!(result.features[result.num_features], 0.0);
     }
 
     #[test]

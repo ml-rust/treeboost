@@ -194,19 +194,10 @@ impl TreeHyperparams {
 }
 
 /// Combined LTT configuration
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct LttConfig {
     pub linear: LinearHyperparams,
     pub tree: TreeHyperparams,
-}
-
-impl Default for LttConfig {
-    fn default() -> Self {
-        Self {
-            linear: LinearHyperparams::default(),
-            tree: TreeHyperparams::default(),
-        }
-    }
 }
 
 /// Result of LTT tuning
@@ -1384,8 +1375,10 @@ mod tests {
 
     #[test]
     fn test_config_validation_empty_grids() {
-        let mut config = LttTunerConfig::default();
-        config.lambda_values = vec![];
+        let config = LttTunerConfig {
+            lambda_values: vec![],
+            ..Default::default()
+        };
 
         let result = config.validate();
         assert!(result.is_err());
@@ -1394,8 +1387,10 @@ mod tests {
 
     #[test]
     fn test_config_validation_bad_val_ratio() {
-        let mut config = LttTunerConfig::default();
-        config.val_ratio = 1.5; // Invalid
+        let config = LttTunerConfig {
+            val_ratio: 1.5, // Invalid
+            ..Default::default()
+        };
 
         let result = config.validate();
         assert!(result.is_err());
@@ -1545,15 +1540,24 @@ mod tests {
 
     #[test]
     fn test_constants_are_reasonable() {
-        // Verify our named constants have sensible values
-        assert!(ltt_defaults::STRONG_LINEAR_R2 > ltt_defaults::WEAK_LINEAR_R2);
-        assert!(ltt_defaults::HIGH_SHRINKAGE_MIN > 0.0 && ltt_defaults::HIGH_SHRINKAGE_MIN < 1.0);
-        assert!(ltt_defaults::LOW_SHRINKAGE_MAX > 0.0 && ltt_defaults::LOW_SHRINKAGE_MAX < 1.0);
-        assert!(
-            ltt_defaults::DEFAULT_LTT_SHRINKAGE > 0.0 && ltt_defaults::DEFAULT_LTT_SHRINKAGE <= 1.0
-        );
-        assert!(ltt_defaults::HIGH_VARIANCE_THRESHOLD > 0.0);
-        assert!(ltt_defaults::MAX_DEPTH_THRESHOLD > 0);
-        assert!(ltt_defaults::MIN_LR_THRESHOLD > 0.0);
+        // Verify our named constants have sensible values.
+        // Bind to runtime locals so these are genuine runtime checks of the
+        // configured constant values, not compile-time constant assertions.
+        let strong_r2 = std::hint::black_box(ltt_defaults::STRONG_LINEAR_R2);
+        let weak_r2 = std::hint::black_box(ltt_defaults::WEAK_LINEAR_R2);
+        let high_shrinkage_min = std::hint::black_box(ltt_defaults::HIGH_SHRINKAGE_MIN);
+        let low_shrinkage_max = std::hint::black_box(ltt_defaults::LOW_SHRINKAGE_MAX);
+        let default_shrinkage = std::hint::black_box(ltt_defaults::DEFAULT_LTT_SHRINKAGE);
+        let high_variance_threshold = std::hint::black_box(ltt_defaults::HIGH_VARIANCE_THRESHOLD);
+        let max_depth_threshold = std::hint::black_box(ltt_defaults::MAX_DEPTH_THRESHOLD);
+        let min_lr_threshold = std::hint::black_box(ltt_defaults::MIN_LR_THRESHOLD);
+
+        assert!(strong_r2 > weak_r2);
+        assert!(high_shrinkage_min > 0.0 && high_shrinkage_min < 1.0);
+        assert!(low_shrinkage_max > 0.0 && low_shrinkage_max < 1.0);
+        assert!(default_shrinkage > 0.0 && default_shrinkage <= 1.0);
+        assert!(high_variance_threshold > 0.0);
+        assert!(max_depth_threshold > 0);
+        assert!(min_lr_threshold > 0.0);
     }
 }

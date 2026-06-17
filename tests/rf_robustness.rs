@@ -41,7 +41,7 @@ fn generate_noise_dataset(num_rows: usize) -> BinnedDataset {
     for i in 0..num_features {
         let dist = Normal::new(0.0f32, 1.0f32).unwrap();
 
-        for r in 0..num_rows {
+        for sig in signal.iter_mut() {
             // Sample value and bin it to u8 range [0, 255]
             let val = dist.sample(&mut rng);
             let binned = ((val + 3.0).clamp(0.0, 6.0) / 6.0 * 255.0) as u8;
@@ -50,7 +50,7 @@ fn generate_noise_dataset(num_rows: usize) -> BinnedDataset {
             // First 10 features contribute to signal (with decaying weights)
             if i < num_informative {
                 let weight = (10 - i) as f32;
-                signal[r] += val * weight;
+                *sig += val * weight;
             }
         }
     }
@@ -98,8 +98,8 @@ fn extract_subset(dataset: &BinnedDataset, start: usize, end: usize) -> BinnedDa
     let mut features = Vec::with_capacity(n_rows * n_features);
     for f in 0..n_features {
         let col = dataset.feature_column(f);
-        for r in start..end {
-            features.push(col[r]);
+        for &val in &col[start..end] {
+            features.push(val);
         }
     }
 

@@ -270,13 +270,11 @@ pub fn compute_rank_ic(predictions: &[f32], targets: &[f32], era_indices: Option
         }
     }
 
-    let avg_ic = if valid_eras == 0 {
+    if valid_eras == 0 {
         0.0
     } else {
         ic_sum / valid_eras as f64
-    };
-
-    avg_ic
+    }
 }
 
 /// Compute Spearman rank correlation between two vectors

@@ -742,13 +742,13 @@ mod tests {
             .unwrap();
 
         let batch_preds = booster.predict_batch(&dataset, &raw_features, 3);
-        for i in 0..50 {
+        for (i, &batch_pred) in batch_preds.iter().take(50).enumerate() {
             let single_pred = booster.predict_row(&dataset, &raw_features, 3, i);
             assert!(
-                (batch_preds[i] - single_pred).abs() < 1e-5,
+                (batch_pred - single_pred).abs() < 1e-5,
                 "Mismatch at row {}: batch={}, single={}",
                 i,
-                batch_preds[i],
+                batch_pred,
                 single_pred
             );
         }

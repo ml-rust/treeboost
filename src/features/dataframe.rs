@@ -103,7 +103,7 @@ pub fn apply_timeseries_features(
 
     let group_ids: Vec<u32> = code_series
         .str()?
-        .into_iter()
+        .iter()
         .map(|v| {
             let code = v.unwrap_or("");
             *code_to_id.entry(code.to_string()).or_insert_with(|| {
@@ -120,7 +120,7 @@ pub fn apply_timeseries_features(
         .as_materialized_series()
         .cast(&DataType::Float64)?
         .f64()?
-        .into_iter()
+        .iter()
         .map(|v| v.unwrap_or(0.0))
         .collect();
 
@@ -140,18 +140,17 @@ pub fn apply_timeseries_features(
             .as_materialized_series()
             .cast(&DataType::Float32)?
             .f32()?
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(0.0))
             .collect::<Vec<f32>>();
         columns.push(col);
     }
 
     // Interleave to row-major format
-    #[allow(clippy::needless_range_loop)]
     let mut feature_data: Vec<f32> = Vec::with_capacity(num_rows * num_features);
     for row_idx in 0..num_rows {
-        for col_idx in 0..num_features {
-            feature_data.push(columns[col_idx][row_idx]);
+        for col in &columns {
+            feature_data.push(col[row_idx]);
         }
     }
 
@@ -211,10 +210,10 @@ pub fn apply_timeseries_features(
 
     // Create new DataFrame with all time-series features
     let columns: Vec<_> = all_series.into_iter().map(|s| s.into_column()).collect();
-    let ts_df = DataFrame::new(columns)?;
+    let ts_df = DataFrame::new_infer_height(columns)?;
 
     // Horizontal stack - much faster than repeated with_column()
-    let new_df = df.hstack(ts_df.get_columns())?;
+    let new_df = df.hstack(ts_df.columns())?;
 
     Ok(new_df)
 }
@@ -262,7 +261,7 @@ pub fn apply_polynomial_features(
         cols
     } else {
         // Auto-detect numeric columns
-        df.get_columns()
+        df.columns()
             .iter()
             .filter(|col| is_numeric(col))
             .map(|col| col.name().to_string())
@@ -282,18 +281,17 @@ pub fn apply_polynomial_features(
             .as_materialized_series()
             .cast(&DataType::Float32)?
             .f32()?
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(0.0))
             .collect::<Vec<f32>>();
         columns.push(col);
     }
 
     // Interleave to row-major format
-    #[allow(clippy::needless_range_loop)]
     let mut feature_data: Vec<f32> = Vec::with_capacity(num_rows * num_features);
     for row_idx in 0..num_rows {
-        for col_idx in 0..num_features {
-            feature_data.push(columns[col_idx][row_idx]);
+        for col in &columns {
+            feature_data.push(col[row_idx]);
         }
     }
 
@@ -320,10 +318,10 @@ pub fn apply_polynomial_features(
 
     // Create new DataFrame with polynomial features
     let columns: Vec<_> = all_series.into_iter().map(|s| s.into_column()).collect();
-    let poly_df = DataFrame::new(columns)?;
+    let poly_df = DataFrame::new_infer_height(columns)?;
 
     // Horizontal stack - O(n) operation
-    let new_df = df.hstack(poly_df.get_columns())?;
+    let new_df = df.hstack(poly_df.columns())?;
 
     Ok(new_df)
 }
@@ -369,7 +367,7 @@ pub fn apply_ratio_features(
         cols
     } else {
         // Auto-detect numeric columns
-        df.get_columns()
+        df.columns()
             .iter()
             .filter(|col| is_numeric(col))
             .map(|col| col.name().to_string())
@@ -389,18 +387,17 @@ pub fn apply_ratio_features(
             .as_materialized_series()
             .cast(&DataType::Float32)?
             .f32()?
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(0.0))
             .collect::<Vec<f32>>();
         columns.push(col);
     }
 
     // Interleave to row-major format
-    #[allow(clippy::needless_range_loop)]
     let mut feature_data: Vec<f32> = Vec::with_capacity(num_rows * num_features);
     for row_idx in 0..num_rows {
-        for col_idx in 0..num_features {
-            feature_data.push(columns[col_idx][row_idx]);
+        for col in &columns {
+            feature_data.push(col[row_idx]);
         }
     }
 
@@ -427,10 +424,10 @@ pub fn apply_ratio_features(
 
     // Create new DataFrame with ratio features
     let columns: Vec<_> = all_series.into_iter().map(|s| s.into_column()).collect();
-    let ratio_df = DataFrame::new(columns)?;
+    let ratio_df = DataFrame::new_infer_height(columns)?;
 
     // Horizontal stack - O(n) operation
-    let new_df = df.hstack(ratio_df.get_columns())?;
+    let new_df = df.hstack(ratio_df.columns())?;
 
     Ok(new_df)
 }
@@ -477,7 +474,7 @@ pub fn apply_interaction_features(
         cols
     } else {
         // Auto-detect numeric columns
-        df.get_columns()
+        df.columns()
             .iter()
             .filter(|col| is_numeric(col))
             .map(|col| col.name().to_string())
@@ -497,18 +494,17 @@ pub fn apply_interaction_features(
             .as_materialized_series()
             .cast(&DataType::Float32)?
             .f32()?
-            .into_iter()
+            .iter()
             .map(|v| v.unwrap_or(0.0))
             .collect::<Vec<f32>>();
         columns.push(col);
     }
 
     // Interleave to row-major format
-    #[allow(clippy::needless_range_loop)]
     let mut feature_data: Vec<f32> = Vec::with_capacity(num_rows * num_features);
     for row_idx in 0..num_rows {
-        for col_idx in 0..num_features {
-            feature_data.push(columns[col_idx][row_idx]);
+        for col in &columns {
+            feature_data.push(col[row_idx]);
         }
     }
 
@@ -535,12 +531,227 @@ pub fn apply_interaction_features(
 
     // Create new DataFrame with interaction features
     let columns: Vec<_> = all_series.into_iter().map(|s| s.into_column()).collect();
-    let interaction_df = DataFrame::new(columns)?;
+    let interaction_df = DataFrame::new_infer_height(columns)?;
 
     // Horizontal stack - O(n) operation
-    let new_df = df.hstack(interaction_df.get_columns())?;
+    let new_df = df.hstack(interaction_df.columns())?;
 
     Ok(new_df)
+}
+
+/// Apply cross-sectional ranking features to panel data
+///
+/// Transforms numeric features to be relative to their cross-section (e.g., all stocks on same date).
+/// Critical for ranking models where relative position matters (Rank IC).
+///
+/// # Arguments
+///
+/// * `df` - Input DataFrame with panel data
+/// * `group_col` - Column defining cross-sections (e.g., "date")
+/// * `exclude_cols` - Columns to exclude (IDs, targets)
+///
+/// # Transformations
+///
+/// For each numeric column, generates:
+/// - `{col}_rank`: Percentile rank [0, 1]
+/// - `{col}_zscore`: Standardized value within cross-section
+/// - `{col}_vs_median`: Distance from cross-sectional median
+///
+/// # Example
+///
+/// ```ignore
+/// let df = apply_crosssectional_features(&df, "date", &["code", "date", "y"])?;
+/// ```
+pub fn apply_crosssectional_features(
+    df: &DataFrame,
+    group_col: &str,
+    exclude_cols: &[&str],
+) -> Result<DataFrame> {
+    crate::features::crosssectional::apply_crosssectional_features(df, group_col, exclude_cols)
+        .map_err(|e| crate::TreeBoostError::Data(e.to_string()))
+}
+
+/// Apply cross-sectional features to specific columns only
+///
+/// Same as `apply_crosssectional_features` but allows specifying which columns to include.
+/// Useful when you only want cross-sectional features for original features, not derived ones.
+///
+/// # Example
+///
+/// ```ignore
+/// // Only apply to original features f_0-f_6, not to lag/rolling features
+/// let original_features = vec!["f_0", "f_1", "f_2", "f_3", "f_4", "f_5", "f_6"];
+/// let df = apply_crosssectional_features_selective(
+///     &df,
+///     "date",
+///     &["code", "date", "y"],
+///     Some(&original_features),
+/// )?;
+/// ```
+pub fn apply_crosssectional_features_selective(
+    df: &DataFrame,
+    group_col: &str,
+    exclude_cols: &[&str],
+    include_cols: Option<&[&str]>,
+) -> Result<DataFrame> {
+    crate::features::crosssectional::apply_crosssectional_features_with_include(
+        df,
+        group_col,
+        exclude_cols,
+        include_cols,
+    )
+    .map_err(|e| crate::TreeBoostError::Data(e.to_string()))
+}
+
+/// Apply a complete feature engineering plan to a DataFrame.
+///
+/// This is the canonical function for applying feature engineering. It consolidates all
+/// feature generation logic in one place to ensure consistency between training and inference.
+///
+/// # Arguments
+///
+/// * `df` - Input DataFrame
+/// * `feature_plan` - Feature engineering plan containing polynomial, ratio, interaction, and time-series features
+/// * `panel_info` - Optional panel data information (for time-series features only)
+///
+/// # Returns
+///
+/// Transformed DataFrame with all engineered features added.
+///
+/// # Example
+///
+/// ```ignore
+/// // During training: AutoBuilder discovers the plan
+/// let plan = feature_plan.clone();
+///
+/// // During inference: Apply the same plan to new data
+/// let test_df = apply_feature_plan(test_df, Some(&plan), None)?;
+/// ```
+pub fn apply_feature_plan(
+    mut df: DataFrame,
+    feature_plan: Option<&crate::features::FeaturePlan>,
+    panel_info: Option<&PanelDataInfo>,
+) -> Result<DataFrame> {
+    // Early return if no plan
+    let plan = match feature_plan {
+        Some(p) if !p.is_empty() => p,
+        _ => return Ok(df),
+    };
+
+    // 1. Apply polynomial features (x², sqrt, log)
+    if !plan.polynomial_features.is_empty() {
+        let poly_gen = PolynomialGenerator::all();
+        df = apply_polynomial_features(df, &poly_gen, Some(plan.polynomial_features.clone()))?;
+        tracing::debug!(
+            num_features = plan.polynomial_features.len(),
+            "Applied polynomial features"
+        );
+    }
+
+    // 2. Apply ratio features (x_i / x_j)
+    if !plan.ratio_pairs.is_empty() {
+        // Get numeric columns for name-to-index mapping
+        let numeric_cols: Vec<String> = df
+            .columns()
+            .iter()
+            .filter(|col| col.dtype().is_numeric())
+            .map(|col| col.name().to_string())
+            .collect();
+
+        // Convert named pairs to index pairs
+        let mut index_pairs = Vec::new();
+        for (col_a, col_b) in &plan.ratio_pairs {
+            if let (Some(idx_a), Some(idx_b)) = (
+                numeric_cols.iter().position(|c| c == col_a),
+                numeric_cols.iter().position(|c| c == col_b),
+            ) {
+                index_pairs.push((idx_a, idx_b));
+            }
+        }
+
+        if !index_pairs.is_empty() {
+            let ratio_gen = RatioGenerator::from_pairs(index_pairs);
+            df = apply_ratio_features(df, &ratio_gen, None)?;
+            tracing::debug!(
+                num_ratios = plan.ratio_pairs.len(),
+                "Applied ratio features"
+            );
+        }
+    }
+
+    // 3. Apply interaction features (x_i * x_j)
+    if !plan.interaction_pairs.is_empty() {
+        // Get numeric columns for name-to-index mapping
+        let numeric_cols: Vec<String> = df
+            .columns()
+            .iter()
+            .filter(|col| col.dtype().is_numeric())
+            .map(|col| col.name().to_string())
+            .collect();
+
+        // Convert named pairs to index pairs
+        let mut index_pairs = Vec::new();
+        for (col_a, col_b) in &plan.interaction_pairs {
+            if let (Some(idx_a), Some(idx_b)) = (
+                numeric_cols.iter().position(|c| c == col_a),
+                numeric_cols.iter().position(|c| c == col_b),
+            ) {
+                index_pairs.push((idx_a, idx_b));
+            }
+        }
+
+        if !index_pairs.is_empty() {
+            let interaction_gen = InteractionGenerator::from_pairs(index_pairs);
+            df = apply_interaction_features(df, &interaction_gen, None)?;
+            tracing::debug!(
+                num_interactions = plan.interaction_pairs.len(),
+                "Applied interaction features"
+            );
+        }
+    }
+
+    // 4. Apply time-series features (lags, rolling, EWMA)
+    if let Some(ts_plan) = &plan.timeseries_features {
+        // Require panel_info for time-series features
+        let panel_info = panel_info.ok_or_else(|| {
+            crate::TreeBoostError::Data(
+                "Time-series features require panel_info (group and date columns)".to_string(),
+            )
+        })?;
+
+        df = apply_timeseries_features(df, ts_plan, panel_info, true /* fast_mode */)?;
+
+        // Fill nulls created by lags with 0 (safe for tree models)
+        // Nulls appear for rows without sufficient history (e.g., first rows of each group)
+        // Only fill nulls/NaN on numeric columns (string columns don't support fill_nan)
+        let numeric_fill: Vec<_> = df
+            .columns()
+            .iter()
+            .filter(|c| c.dtype().is_numeric())
+            .map(|c| col(c.name().clone()).fill_null(lit(0)).fill_nan(lit(0.0)))
+            .collect();
+        if !numeric_fill.is_empty() {
+            df = df
+                .lazy()
+                .with_columns(numeric_fill)
+                .collect()
+                .map_err(|e| {
+                    crate::TreeBoostError::Data(format!(
+                        "Failed to fill nulls after feature engineering: {}",
+                        e
+                    ))
+                })?;
+        }
+
+        tracing::debug!(
+            num_lags = ts_plan.lag_periods.len(),
+            num_rolling = ts_plan.rolling_windows.len(),
+            num_ewma = ts_plan.ewma_alphas.len(),
+            "Applied time-series features"
+        );
+    }
+
+    Ok(df)
 }
 
 #[cfg(test)]
@@ -658,219 +869,4 @@ mod tests {
             .collect();
         assert!(col_names.contains(&"a_mul_b".to_string()));
     }
-}
-
-/// Apply cross-sectional ranking features to panel data
-///
-/// Transforms numeric features to be relative to their cross-section (e.g., all stocks on same date).
-/// Critical for ranking models where relative position matters (Rank IC).
-///
-/// # Arguments
-///
-/// * `df` - Input DataFrame with panel data
-/// * `group_col` - Column defining cross-sections (e.g., "date")
-/// * `exclude_cols` - Columns to exclude (IDs, targets)
-///
-/// # Transformations
-///
-/// For each numeric column, generates:
-/// - `{col}_rank`: Percentile rank [0, 1]
-/// - `{col}_zscore`: Standardized value within cross-section
-/// - `{col}_vs_median`: Distance from cross-sectional median
-///
-/// # Example
-///
-/// ```ignore
-/// let df = apply_crosssectional_features(&df, "date", &["code", "date", "y"])?;
-/// ```
-pub fn apply_crosssectional_features(
-    df: &DataFrame,
-    group_col: &str,
-    exclude_cols: &[&str],
-) -> Result<DataFrame> {
-    crate::features::crosssectional::apply_crosssectional_features(df, group_col, exclude_cols)
-        .map_err(|e| crate::TreeBoostError::Data(e.to_string()))
-}
-
-/// Apply cross-sectional features to specific columns only
-///
-/// Same as `apply_crosssectional_features` but allows specifying which columns to include.
-/// Useful when you only want cross-sectional features for original features, not derived ones.
-///
-/// # Example
-///
-/// ```ignore
-/// // Only apply to original features f_0-f_6, not to lag/rolling features
-/// let original_features = vec!["f_0", "f_1", "f_2", "f_3", "f_4", "f_5", "f_6"];
-/// let df = apply_crosssectional_features_selective(
-///     &df,
-///     "date",
-///     &["code", "date", "y"],
-///     Some(&original_features),
-/// )?;
-/// ```
-pub fn apply_crosssectional_features_selective(
-    df: &DataFrame,
-    group_col: &str,
-    exclude_cols: &[&str],
-    include_cols: Option<&[&str]>,
-) -> Result<DataFrame> {
-    crate::features::crosssectional::apply_crosssectional_features_with_include(
-        df,
-        group_col,
-        exclude_cols,
-        include_cols,
-    )
-    .map_err(|e| crate::TreeBoostError::Data(e.to_string()))
-}
-
-/// Apply a complete feature engineering plan to a DataFrame.
-///
-/// This is the canonical function for applying feature engineering. It consolidates all
-/// feature generation logic in one place to ensure consistency between training and inference.
-///
-/// # Arguments
-///
-/// * `df` - Input DataFrame
-/// * `feature_plan` - Feature engineering plan containing polynomial, ratio, interaction, and time-series features
-/// * `panel_info` - Optional panel data information (for time-series features only)
-///
-/// # Returns
-///
-/// Transformed DataFrame with all engineered features added.
-///
-/// # Example
-///
-/// ```ignore
-/// // During training: AutoBuilder discovers the plan
-/// let plan = feature_plan.clone();
-///
-/// // During inference: Apply the same plan to new data
-/// let test_df = apply_feature_plan(test_df, Some(&plan), None)?;
-/// ```
-pub fn apply_feature_plan(
-    mut df: DataFrame,
-    feature_plan: Option<&crate::features::FeaturePlan>,
-    panel_info: Option<&PanelDataInfo>,
-) -> Result<DataFrame> {
-    // Early return if no plan
-    let plan = match feature_plan {
-        Some(p) if !p.is_empty() => p,
-        _ => return Ok(df),
-    };
-
-    // 1. Apply polynomial features (x², sqrt, log)
-    if !plan.polynomial_features.is_empty() {
-        let poly_gen = PolynomialGenerator::all();
-        df = apply_polynomial_features(df, &poly_gen, Some(plan.polynomial_features.clone()))?;
-        tracing::debug!(
-            num_features = plan.polynomial_features.len(),
-            "Applied polynomial features"
-        );
-    }
-
-    // 2. Apply ratio features (x_i / x_j)
-    if !plan.ratio_pairs.is_empty() {
-        // Get numeric columns for name-to-index mapping
-        let numeric_cols: Vec<String> = df
-            .get_columns()
-            .iter()
-            .filter(|col| col.dtype().is_numeric())
-            .map(|col| col.name().to_string())
-            .collect();
-
-        // Convert named pairs to index pairs
-        let mut index_pairs = Vec::new();
-        for (col_a, col_b) in &plan.ratio_pairs {
-            if let (Some(idx_a), Some(idx_b)) = (
-                numeric_cols.iter().position(|c| c == col_a),
-                numeric_cols.iter().position(|c| c == col_b),
-            ) {
-                index_pairs.push((idx_a, idx_b));
-            }
-        }
-
-        if !index_pairs.is_empty() {
-            let ratio_gen = RatioGenerator::from_pairs(index_pairs);
-            df = apply_ratio_features(df, &ratio_gen, None)?;
-            tracing::debug!(
-                num_ratios = plan.ratio_pairs.len(),
-                "Applied ratio features"
-            );
-        }
-    }
-
-    // 3. Apply interaction features (x_i * x_j)
-    if !plan.interaction_pairs.is_empty() {
-        // Get numeric columns for name-to-index mapping
-        let numeric_cols: Vec<String> = df
-            .get_columns()
-            .iter()
-            .filter(|col| col.dtype().is_numeric())
-            .map(|col| col.name().to_string())
-            .collect();
-
-        // Convert named pairs to index pairs
-        let mut index_pairs = Vec::new();
-        for (col_a, col_b) in &plan.interaction_pairs {
-            if let (Some(idx_a), Some(idx_b)) = (
-                numeric_cols.iter().position(|c| c == col_a),
-                numeric_cols.iter().position(|c| c == col_b),
-            ) {
-                index_pairs.push((idx_a, idx_b));
-            }
-        }
-
-        if !index_pairs.is_empty() {
-            let interaction_gen = InteractionGenerator::from_pairs(index_pairs);
-            df = apply_interaction_features(df, &interaction_gen, None)?;
-            tracing::debug!(
-                num_interactions = plan.interaction_pairs.len(),
-                "Applied interaction features"
-            );
-        }
-    }
-
-    // 4. Apply time-series features (lags, rolling, EWMA)
-    if let Some(ts_plan) = &plan.timeseries_features {
-        // Require panel_info for time-series features
-        let panel_info = panel_info.ok_or_else(|| {
-            crate::TreeBoostError::Data(
-                "Time-series features require panel_info (group and date columns)".to_string(),
-            )
-        })?;
-
-        df = apply_timeseries_features(df, ts_plan, panel_info, true /* fast_mode */)?;
-
-        // Fill nulls created by lags with 0 (safe for tree models)
-        // Nulls appear for rows without sufficient history (e.g., first rows of each group)
-        // Only fill nulls/NaN on numeric columns (string columns don't support fill_nan)
-        let numeric_fill: Vec<_> = df
-            .get_columns()
-            .iter()
-            .filter(|c| c.dtype().is_numeric())
-            .map(|c| col(c.name().clone()).fill_null(lit(0)).fill_nan(lit(0.0)))
-            .collect();
-        if !numeric_fill.is_empty() {
-            df = df
-                .lazy()
-                .with_columns(numeric_fill)
-                .collect()
-                .map_err(|e| {
-                    crate::TreeBoostError::Data(format!(
-                        "Failed to fill nulls after feature engineering: {}",
-                        e
-                    ))
-                })?;
-        }
-
-        tracing::debug!(
-            num_lags = ts_plan.lag_periods.len(),
-            num_rolling = ts_plan.rolling_windows.len(),
-            num_ewma = ts_plan.ewma_alphas.len(),
-            "Applied time-series features"
-        );
-    }
-
-    Ok(df)
 }

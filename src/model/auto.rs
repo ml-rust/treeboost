@@ -483,7 +483,7 @@ impl AutoModel {
 
         // For LinearThenTree, use dual-representation inference if FeatureExtractor is stored
         if matches!(self.mode, crate::model::BoostingMode::LinearThenTree) {
-            if let Some(ref extractor) = self.model.feature_extractor() {
+            if let Some(extractor) = self.model.feature_extractor() {
                 // CRITICAL: Extract from preprocessed_df (with encoded categoricals),
                 // NOT from original df (with String categoricals)
                 let (raw_features, _num_features) =
@@ -517,12 +517,12 @@ impl AutoModel {
         let (preprocessed_df, dataset) = self.prepare_dataset_for_prediction(df)?;
 
         // Extract features using FeatureExtractor
-        if let Some(ref extractor) = self.model.feature_extractor() {
+        if let Some(extractor) = self.model.feature_extractor() {
             let (raw_features, _num_features) =
                 extractor.extract(&preprocessed_df, &self.target_column)?;
 
             // Get linear-only predictions from the model
-            return Ok(self.model.predict_linear_only(&dataset, &raw_features)?);
+            return self.model.predict_linear_only(&dataset, &raw_features);
         }
 
         Err(TreeBoostError::Config(

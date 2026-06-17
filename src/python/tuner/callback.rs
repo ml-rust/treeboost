@@ -35,7 +35,7 @@ impl PyProgressCallback {
     /// - total: Total number of trials
     pub fn call(&self, trial: &TrialResult, current: usize, total: usize) {
         // Reacquire GIL to call Python
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let py_trial = PyTrialResult::from(trial.clone());
             let py_trial_obj = Py::new(py, py_trial).unwrap();
 

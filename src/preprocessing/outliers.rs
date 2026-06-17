@@ -780,7 +780,7 @@ mod tests {
             assert_eq!(indicator_names[1], "f1_outlier");
 
             // Row 4, feature 0 should be flagged
-            assert!((indicators[4 * 2 + 0] - 1.0).abs() < 1e-6);
+            assert!((indicators[4 * 2] - 1.0).abs() < 1e-6);
             // Row 4, feature 1 should not be flagged
             assert!((indicators[4 * 2 + 1] - 0.0).abs() < 1e-6);
         } else {

@@ -124,7 +124,7 @@ fn test_ltt_multilabel_prediction_shape() -> Result<(), Box<dyn std::error::Erro
     for row in &proba {
         for &p in row {
             assert!(
-                p >= 0.0 && p <= 1.0,
+                (0.0..=1.0).contains(&p),
                 "Probability should be in [0, 1], got {}",
                 p
             );
@@ -165,8 +165,8 @@ fn test_ltt_multilabel_correctness() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // GBDT should achieve reasonable accuracy
-    for k in 0..num_outputs {
-        let accuracy = gbdt_correct_per_label[k] as f64 / num_rows as f64;
+    for (k, &correct) in gbdt_correct_per_label.iter().enumerate() {
+        let accuracy = correct as f64 / num_rows as f64;
         assert!(
             accuracy > 0.5,
             "GBDT Label {} accuracy {:.2} should be better than random",
@@ -201,8 +201,8 @@ fn test_ltt_multilabel_correctness() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // LTT should also achieve reasonable accuracy (at least as good as GBDT)
-    for k in 0..num_outputs {
-        let accuracy = correct_per_label[k] as f64 / num_rows as f64;
+    for (k, &correct) in correct_per_label.iter().enumerate() {
+        let accuracy = correct as f64 / num_rows as f64;
         assert!(
             accuracy > 0.5,
             "LTT Label {} accuracy {:.2} should be better than random",

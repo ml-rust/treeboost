@@ -8,7 +8,6 @@
 
 mod common;
 
-use polars::prelude::*;
 use treeboost::{
     learner::{LinearConfig, TreeConfig},
     model::{AutoConfig, AutoModel, BoostingMode, TuningLevel, UniversalConfig},

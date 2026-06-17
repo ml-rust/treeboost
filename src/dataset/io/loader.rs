@@ -28,7 +28,7 @@ impl DatasetLoader {
         target_column: &str,
         feature_columns: Option<&[&str]>,
     ) -> Result<BinnedDataset> {
-        let pl_path = PlPath::new(&path.as_ref().to_string_lossy());
+        let pl_path = PlRefPath::new(&*path.as_ref().to_string_lossy());
         let df = LazyFrame::scan_parquet(pl_path, Default::default())?.collect()?;
         self.from_dataframe(df, target_column, feature_columns)
     }
@@ -200,7 +200,7 @@ impl DatasetLoader {
         let mut next_idx = 0u16;
 
         let indices: Vec<u16> = str_ca
-            .into_iter()
+            .iter()
             .map(|opt| {
                 opt.map_or(0, |s| {
                     *era_map.entry(s.to_string()).or_insert_with(|| {
@@ -255,7 +255,7 @@ impl DatasetLoader {
             .map_err(|e| TreeBoostError::Data(format!("Failed to cast to f64: {}", e)))?
             .f64()
             .map_err(|e| TreeBoostError::Data(format!("Failed to get f64 chunked: {}", e)))?
-            .into_iter()
+            .iter()
             .map(|opt| Ok(opt.unwrap_or(f64::NAN)))
             .collect()
     }
@@ -267,7 +267,7 @@ impl DatasetLoader {
             .map_err(|e| TreeBoostError::Data(format!("Failed to cast to f32: {}", e)))?
             .f32()
             .map_err(|e| TreeBoostError::Data(format!("Failed to get f32 chunked: {}", e)))?
-            .into_iter()
+            .iter()
             .map(|opt| Ok(opt.unwrap_or(f32::NAN)))
             .collect()
     }
@@ -291,7 +291,7 @@ impl DatasetLoader {
         let mut next_idx = 0u32;
 
         let values: Vec<f64> = str_ca
-            .into_iter()
+            .iter()
             .map(|opt| match opt {
                 Some(s) => {
                     let idx = *mapping.entry(s.to_string()).or_insert_with(|| {
@@ -314,7 +314,7 @@ impl DatasetLoader {
         path: impl AsRef<Path>,
         feature_info: &[FeatureInfo],
     ) -> Result<BinnedDataset> {
-        let pl_path = PlPath::new(&path.as_ref().to_string_lossy());
+        let pl_path = PlRefPath::new(&*path.as_ref().to_string_lossy());
         let df = LazyFrame::scan_parquet(pl_path, Default::default())?.collect()?;
         self.from_dataframe_for_prediction(df, feature_info)
     }

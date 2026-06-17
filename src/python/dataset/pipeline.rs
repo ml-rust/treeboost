@@ -26,7 +26,7 @@ use super::types::{PyBinnedDataset, PyFeatureInfo};
 ///     .with_smoothing(10.0)
 /// )
 /// ```
-#[pyclass(name = "PipelineConfig")]
+#[pyclass(from_py_object, name = "PipelineConfig")]
 #[derive(Clone)]
 pub struct PyPipelineConfig {
     pub(crate) inner: PipelineConfig,
@@ -154,7 +154,7 @@ impl PyPipelineConfig {
 ///
 /// Learned state from training that is needed for inference.
 /// Can be serialized and loaded for production deployment.
-#[pyclass(name = "PipelineState")]
+#[pyclass(from_py_object, name = "PipelineState")]
 #[derive(Clone)]
 pub struct PyPipelineState {
     pub(crate) inner: PipelineState,
@@ -286,13 +286,13 @@ impl PyDataPipeline {
             .as_ref()
             .map(|v| v.iter().map(|s| s.as_str()).collect());
 
-        let result = py.allow_threads(|| {
+        let result = py.detach(|| {
             self.inner
                 .load_csv_for_training(path, target, cat_refs.as_deref())
         });
 
         match result {
-            Ok((dataset, state)) => {
+            Ok((dataset, state, _)) => {
                 Ok((PyBinnedDataset::from(dataset), PyPipelineState::from(state)))
             }
             Err(e) => Err(pyo3::exceptions::PyRuntimeError::new_err(format!(
@@ -329,13 +329,13 @@ impl PyDataPipeline {
             .as_ref()
             .map(|v| v.iter().map(|s| s.as_str()).collect());
 
-        let result = py.allow_threads(|| {
+        let result = py.detach(|| {
             self.inner
                 .load_parquet_for_training(path, target, cat_refs.as_deref())
         });
 
         match result {
-            Ok((dataset, state)) => {
+            Ok((dataset, state, _)) => {
                 Ok((PyBinnedDataset::from(dataset), PyPipelineState::from(state)))
             }
             Err(e) => Err(pyo3::exceptions::PyRuntimeError::new_err(format!(
@@ -361,7 +361,7 @@ impl PyDataPipeline {
         path: &str,
         state: &PyPipelineState,
     ) -> PyResult<PyBinnedDataset> {
-        let result = py.allow_threads(|| self.inner.load_csv_for_inference(path, &state.inner));
+        let result = py.detach(|| self.inner.load_csv_for_inference(path, &state.inner));
 
         match result {
             Ok(dataset) => Ok(PyBinnedDataset::from(dataset)),
@@ -388,7 +388,7 @@ impl PyDataPipeline {
         path: &str,
         state: &PyPipelineState,
     ) -> PyResult<PyBinnedDataset> {
-        let result = py.allow_threads(|| self.inner.load_parquet_for_inference(path, &state.inner));
+        let result = py.detach(|| self.inner.load_parquet_for_inference(path, &state.inner));
 
         match result {
             Ok(dataset) => Ok(PyBinnedDataset::from(dataset)),

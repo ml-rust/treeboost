@@ -10,7 +10,7 @@ use crate::inference::{ConformalPredictor, Prediction};
 /// Python wrapper for Prediction
 ///
 /// A prediction result with optional confidence interval.
-#[pyclass(name = "Prediction")]
+#[pyclass(from_py_object, name = "Prediction")]
 #[derive(Clone)]
 pub struct PyPrediction {
     inner: Prediction,
@@ -96,7 +96,7 @@ impl From<Prediction> for PyPrediction {
 ///
 /// Computes prediction intervals with distribution-free coverage guarantees.
 /// Uses split conformal prediction with finite-sample guarantees.
-#[pyclass(name = "ConformalPredictor")]
+#[pyclass(from_py_object, name = "ConformalPredictor")]
 #[derive(Clone)]
 pub struct PyConformalPredictor {
     inner: ConformalPredictor,

@@ -11,9 +11,10 @@ use std::path::Path;
 /// Save a model to a bincode file
 pub fn save_model_bincode(model: &GBDTModel, path: impl AsRef<Path>) -> Result<()> {
     let file = File::create(path)?;
-    let writer = BufWriter::new(file);
+    let mut writer = BufWriter::new(file);
+    let config = bincode::config::standard();
 
-    bincode::serialize_into(writer, model).map_err(|e| {
+    bincode::serde::encode_into_std_write(model, &mut writer, config).map_err(|e| {
         TreeBoostError::Serialization(format!("Failed to serialize bincode: {}", e))
     })?;
 
@@ -23,11 +24,13 @@ pub fn save_model_bincode(model: &GBDTModel, path: impl AsRef<Path>) -> Result<(
 /// Load a model from a bincode file
 pub fn load_model_bincode(path: impl AsRef<Path>) -> Result<GBDTModel> {
     let file = File::open(path)?;
-    let reader = BufReader::new(file);
+    let mut reader = BufReader::new(file);
+    let config = bincode::config::standard();
 
-    let model: GBDTModel = bincode::deserialize_from(reader).map_err(|e| {
-        TreeBoostError::Serialization(format!("Failed to deserialize bincode: {}", e))
-    })?;
+    let model: GBDTModel =
+        bincode::serde::decode_from_std_read(&mut reader, config).map_err(|e| {
+            TreeBoostError::Serialization(format!("Failed to deserialize bincode: {}", e))
+        })?;
 
     Ok(model)
 }

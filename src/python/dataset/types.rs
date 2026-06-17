@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use crate::dataset::{BinnedDataset, FeatureInfo, FeatureType};
 
 /// Python wrapper for FeatureType enum
-#[pyclass(name = "FeatureType", eq)]
+#[pyclass(from_py_object, name = "FeatureType", eq)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PyFeatureType {
     inner: FeatureType,
@@ -65,7 +65,7 @@ impl From<PyFeatureType> for FeatureType {
 }
 
 /// Python wrapper for feature metadata
-#[pyclass(name = "FeatureInfo")]
+#[pyclass(from_py_object, name = "FeatureInfo")]
 #[derive(Clone)]
 pub struct PyFeatureInfo {
     inner: FeatureInfo,

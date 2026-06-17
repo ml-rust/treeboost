@@ -69,6 +69,8 @@ impl FullGpuTreeBuilder {
     ///
     /// Key optimization: Histogram subtraction - only build GPU histograms for
     /// the smaller sibling, compute larger via: parent - smaller (~50% less GPU work).
+    // reason: kernel/training entry point with many parameters
+    #[allow(clippy::too_many_arguments)]
     pub fn build_tree(
         &mut self,
         dataset: &BinnedDataset,
@@ -387,6 +389,8 @@ impl FullGpuTreeBuilder {
     /// - GPU histogram building (for smaller child only)
     /// - CPU histogram subtraction (fast arithmetic)
     /// - GPU partition with in-place CPU array management
+    // reason: kernel/training entry point with many parameters
+    #[allow(clippy::too_many_arguments)]
     pub fn build_tree_best_first(
         &mut self,
         dataset: &BinnedDataset,

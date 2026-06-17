@@ -77,13 +77,13 @@ pub fn apply_crosssectional_features_with_include(
             .collect()
     } else {
         // Otherwise, process all numeric columns (excluding group and exclusion list)
-        df.get_columns()
+        df.columns()
             .iter()
-            .filter(|s| {
-                let name = s.name().as_str();
-                s.dtype().is_numeric() && name != group_col && !exclude_cols.contains(&name)
+            .filter(|col| {
+                let name = col.name().as_str();
+                col.dtype().is_numeric() && name != group_col && !exclude_cols.contains(&name)
             })
-            .map(|s| s.name().to_string())
+            .map(|col| col.name().to_string())
             .collect()
     };
 
@@ -104,19 +104,19 @@ pub fn apply_crosssectional_features_with_include(
         let lazy = result.clone().lazy();
 
         // Compute group-wise statistics using window functions (FAST!)
-        let mean_expr = col(col_name).mean().over([col(group_col)]);
-        let std_expr = col(col_name).std(1).over([col(group_col)]);
-        let median_expr = col(col_name).median().over([col(group_col)]);
+        let mean_expr = col(col_name).mean().over([col(group_col)])?;
+        let std_expr = col(col_name).std(1).over([col(group_col)])?;
+        let median_expr = col(col_name).median().over([col(group_col)])?;
 
         // Z-score: (x - mean) / std
         let zscore_expr = when(std_expr.clone().gt(lit(0.0)))
             .then((col(col_name) - mean_expr.clone()) / std_expr)
             .otherwise(lit(0.0))
-            .alias(&format!("{}_zscore", col_name));
+            .alias(format!("{}_zscore", col_name));
 
         // Median difference: x - median
         let median_diff_expr =
-            (col(col_name) - median_expr).alias(&format!("{}_vs_median", col_name));
+            (col(col_name) - median_expr).alias(format!("{}_vs_median", col_name));
 
         // Apply window functions
         let result_with_stats = lazy
@@ -128,7 +128,7 @@ pub fn apply_crosssectional_features_with_include(
         let rank_col = compute_group_ranks(&result_with_stats, col_name, group_col)?;
 
         result = result_with_stats;
-        result.with_column(rank_col)?;
+        result.with_column(rank_col.into())?;
     }
 
     Ok(result)
@@ -155,12 +155,12 @@ fn compute_group_ranks(df: &DataFrame, feature_col: &str, group_col: &str) -> Po
                     },
                     None,
                 )
-                .over([col(group_col)])
+                .over([col(group_col)])?
                 .alias("__temp_rank__"),
             // Step 2: Get group size
             col(feature_col)
                 .count()
-                .over([col(group_col)])
+                .over([col(group_col)])?
                 .alias("__group_size__"),
         ])
         .with_columns([
@@ -172,9 +172,9 @@ fn compute_group_ranks(df: &DataFrame, feature_col: &str, group_col: &str) -> Po
                         / (col("__group_size__").cast(DataType::Float64) - lit(1.0)),
                 )
                 .otherwise(lit(0.5)) // Single-element groups get 0.5
-                .alias(&format!("{}_rank", feature_col)),
+                .alias(format!("{}_rank", feature_col)),
         ])
-        .select([col(&format!("{}_rank", feature_col))])
+        .select([col(format!("{}_rank", feature_col))])
         .collect()?;
 
     Ok(result
@@ -210,7 +210,7 @@ mod tests {
             .unwrap()
             .f64()
             .unwrap()
-            .into_iter()
+            .iter()
             .take(3)
             .collect::<Vec<_>>();
 

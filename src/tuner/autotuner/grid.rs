@@ -202,7 +202,7 @@ pub(crate) fn generate_lhs_grid(
 ) -> Vec<HashMap<String, f32>> {
     use rand::rngs::StdRng;
     use rand::seq::SliceRandom;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng};
 
     if n_samples == 0 {
         return Vec::new();
@@ -275,7 +275,7 @@ pub(crate) fn generate_random_grid(
     seed: u64,
 ) -> Vec<HashMap<String, f32>> {
     use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng};
 
     if n_samples == 0 {
         return Vec::new();

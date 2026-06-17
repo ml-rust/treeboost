@@ -281,9 +281,10 @@ impl TuningLevel {
 /// let config = AutoConfig::new()
 ///     .with_target_bound_config(TargetBoundConfig::ClampEmpirical);
 /// ```
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum TargetBoundConfig {
     /// No target transformation (unbounded regression)
+    #[default]
     None,
 
     /// Logit transform with user-specified bounds.
@@ -303,12 +304,6 @@ pub enum TargetBoundConfig {
     /// Clamp-only with bounds from training data min/max.
     /// Simpler bounded regression using empirical bounds.
     ClampEmpirical,
-}
-
-impl Default for TargetBoundConfig {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 /// Ensemble strategy for AutoBuilder (PureTree only)
@@ -394,24 +389,19 @@ impl AutoEnsembleConfig {
 ///     ))
 ///     .fit(&df, "target")?;
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum FeatureEngineeringMode {
     /// No feature engineering
     None,
     /// Minimal features (polynomial only, max 20)
     Minimal,
     /// Standard features (polynomial + interactions, max 50)
+    #[default]
     Default,
     /// Aggressive features (all types, max 100)
     Aggressive,
     /// Custom configuration
     Custom(crate::features::SmartFeatureConfig),
-}
-
-impl Default for FeatureEngineeringMode {
-    fn default() -> Self {
-        Self::Default
-    }
 }
 
 impl FeatureEngineeringMode {
@@ -464,24 +454,19 @@ impl FeatureEngineeringMode {
 ///     ))
 ///     .fit(&df, "target")?;
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum PreprocessingMode {
     /// No preprocessing
     None,
     /// Minimal preprocessing (basic imputation only)
     Minimal,
     /// Standard preprocessing (default)
+    #[default]
     Default,
     /// Strict preprocessing (aggressive cleaning)
     Strict,
     /// Custom configuration
     Custom(crate::preprocessing::SmartPreprocessConfig),
-}
-
-impl Default for PreprocessingMode {
-    fn default() -> Self {
-        Self::Default
-    }
 }
 
 impl PreprocessingMode {
@@ -540,9 +525,10 @@ impl PreprocessingMode {
 ///     ))
 ///     .fit(&df, "target")?;
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum EnsembleMode {
     /// No ensemble (single model)
+    #[default]
     Disabled,
     /// Default ensemble (Ridge stacking with 5 seeds)
     Default,
@@ -550,12 +536,6 @@ pub enum EnsembleMode {
     WithMethod(AutoEnsembleMethod),
     /// Custom ensemble configuration
     Custom(AutoEnsembleConfig),
-}
-
-impl Default for EnsembleMode {
-    fn default() -> Self {
-        Self::Disabled
-    }
 }
 
 impl EnsembleMode {
@@ -1656,6 +1636,12 @@ impl TreeTunerConfig {
             TreeTunerPreset::Standard => Self::preset_standard(),
             TreeTunerPreset::Thorough => Self::preset_thorough(),
         }
+    }
+}
+
+impl Default for TreeTunerConfig {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

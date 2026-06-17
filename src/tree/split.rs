@@ -804,11 +804,11 @@ impl SplitFinder {
 
             // Check that eras 0 and 1 exist in per_era_totals
             let has_era_0 = per_era_totals
-                .get(0)
-                .map_or(false, |(_, _, count)| *count > 0);
+                .first()
+                .is_some_and(|(_, _, count)| *count > 0);
             let has_era_1 = per_era_totals
                 .get(1)
-                .map_or(false, |(_, _, count)| *count > 0);
+                .is_some_and(|(_, _, count)| *count > 0);
 
             if !has_era_0 || !has_era_1 {
                 eprintln!(

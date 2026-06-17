@@ -58,7 +58,12 @@ mod tests {
         for x in extreme_values {
             let s = sigmoid(x);
             assert!(s.is_finite(), "sigmoid({}) = {} is not finite", x, s);
-            assert!(s >= 0.0 && s <= 1.0, "sigmoid({}) = {} out of [0,1]", x, s);
+            assert!(
+                (0.0..=1.0).contains(&s),
+                "sigmoid({}) = {} out of [0,1]",
+                x,
+                s
+            );
         }
     }
 }

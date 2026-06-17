@@ -194,7 +194,7 @@ impl PartitionKernel {
             };
         }
 
-        let num_blocks = (num_indices as u32 + Self::WORKGROUP_SIZE - 1) / Self::WORKGROUP_SIZE;
+        let num_blocks = (num_indices as u32).div_ceil(Self::WORKGROUP_SIZE);
 
         // Calculate buffer sizes
         let bins_size = (bins_packed.len() * 4) as u64;
@@ -404,7 +404,7 @@ impl PartitionKernel {
         // Calculate buffer sizes
         let bins_size = (bins_packed.len() * 4) as u64;
         let indices_size = (total_rows.max(1) * 4) as u64;
-        let node_splits_size = (num_nodes * std::mem::size_of::<NodeSplit>()) as u64;
+        let node_splits_size = std::mem::size_of_val(node_splits) as u64;
         let node_counters_size = (num_nodes * 2 * 4) as u64; // left + right per node
 
         let batched_params = BatchedPartitionParams {
@@ -544,7 +544,7 @@ impl PartitionKernel {
             });
             pass.set_pipeline(&self.pipeline_zero_node_counters);
             pass.set_bind_group(0, &bind_group_zero, &[]);
-            let workgroups = (num_nodes as u32 * 2 + 255) / 256;
+            let workgroups = (num_nodes as u32 * 2).div_ceil(256);
             pass.dispatch_workgroups(workgroups, 1, 1);
         }
 
@@ -682,7 +682,7 @@ mod tests {
         // Create simple test data
         // 4 rows, 2 features, row-major bins
         // Row 0: [0, 1], Row 1: [2, 3], Row 2: [4, 5], Row 3: [6, 7]
-        let bins = vec![0u8, 1, 2, 3, 4, 5, 6, 7];
+        let bins = [0u8, 1, 2, 3, 4, 5, 6, 7];
         let bins_packed: Vec<u32> = bins
             .chunks(4)
             .map(|chunk| {

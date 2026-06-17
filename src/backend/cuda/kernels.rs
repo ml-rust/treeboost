@@ -250,7 +250,7 @@ impl HistogramKernel {
         let stream = self.device.stream();
 
         // Zero output histograms
-        let zero_blocks = ((output_bins + 255) / 256) as u32;
+        let zero_blocks = output_bins.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks, 1, 1),
@@ -273,7 +273,7 @@ impl HistogramKernel {
         // Calculate 2D grid dimensions
         // grid.x = num_features, grid.y = row_tiles
         let rows_per_tile = THREADS_PER_BLOCK;
-        let row_tiles = ((num_indices as u32) + rows_per_tile - 1) / rows_per_tile;
+        let row_tiles = (num_indices as u32).div_ceil(rows_per_tile);
 
         // Shared memory: 256 * (f32 + f32 + u32) = 256 * 12 = 3072 bytes
         let shared_mem_bytes = 256 * (4 + 4 + 4);
@@ -329,11 +329,9 @@ impl HistogramKernel {
                 let mut hess = [0.0f32; 256];
                 let mut counts = [0u32; 256];
 
-                for bin in 0..256 {
-                    grads[bin] = grad_hist[base + bin];
-                    hess[bin] = hess_hist[base + bin];
-                    counts[bin] = count_hist[base + bin];
-                }
+                grads.copy_from_slice(&grad_hist[base..base + 256]);
+                hess.copy_from_slice(&hess_hist[base..base + 256]);
+                counts.copy_from_slice(&count_hist[base..base + 256]);
 
                 Histogram::from_raw_arrays(&grads, &hess, &counts)
             })
@@ -438,7 +436,7 @@ impl HistogramKernel {
         let stream = self.device.stream();
 
         // Zero output histograms
-        let zero_blocks = ((output_size + 255) / 256) as u32;
+        let zero_blocks = output_size.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks, 1, 1),
@@ -459,7 +457,7 @@ impl HistogramKernel {
         }
 
         // Grid: (num_features, num_batches * tiles_per_batch)
-        let tiles_per_batch = ((max_count as u32) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        let tiles_per_batch = (max_count as u32).div_ceil(THREADS_PER_BLOCK);
         let shared_mem_bytes = 256 * (4 + 4 + 4);
 
         let config = LaunchConfig {
@@ -521,11 +519,9 @@ impl HistogramKernel {
                         let mut hess = [0.0f32; 256];
                         let mut counts = [0u32; 256];
 
-                        for bin in 0..256 {
-                            grads[bin] = grad_hist[base + bin];
-                            hess[bin] = hess_hist[base + bin];
-                            counts[bin] = count_hist[base + bin];
-                        }
+                        grads.copy_from_slice(&grad_hist[base..base + 256]);
+                        hess.copy_from_slice(&hess_hist[base..base + 256]);
+                        counts.copy_from_slice(&count_hist[base..base + 256]);
 
                         Histogram::from_raw_arrays(&grads, &hess, &counts)
                     })
@@ -592,7 +588,7 @@ impl HistogramKernel {
         let stream = self.device.stream();
 
         // Zero output histograms
-        let zero_blocks = ((output_size + 255) / 256) as u32;
+        let zero_blocks = output_size.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks, 1, 1),
@@ -613,7 +609,7 @@ impl HistogramKernel {
         }
 
         // Grid: (num_features, tiles_per_node, num_nodes) - split into Y and Z to stay under 65535
-        let tiles_per_node = ((max_node_count as u32) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        let tiles_per_node = (max_node_count as u32).div_ceil(THREADS_PER_BLOCK);
         let shared_mem_bytes = 256 * (4 + 4 + 4);
 
         let config = LaunchConfig {
@@ -680,11 +676,9 @@ impl HistogramKernel {
                         let mut hess = [0.0f32; 256];
                         let mut counts = [0u32; 256];
 
-                        for bin in 0..256 {
-                            grads[bin] = grad_hist[base + bin];
-                            hess[bin] = hess_hist[base + bin];
-                            counts[bin] = count_hist[base + bin];
-                        }
+                        grads.copy_from_slice(&grad_hist[base..base + 256]);
+                        hess.copy_from_slice(&hess_hist[base..base + 256]);
+                        counts.copy_from_slice(&count_hist[base..base + 256]);
 
                         Histogram::from_raw_arrays(&grads, &hess, &counts)
                     })
@@ -697,6 +691,8 @@ impl HistogramKernel {
     ///
     /// Returns histograms indexed as `[era][feature]`, enabling directional
     /// agreement checks across eras during split finding.
+    // reason: kernel/training entry point with many parameters
+    #[allow(clippy::too_many_arguments)]
     pub fn build_era_histograms(
         &mut self,
         bins: &[u8],
@@ -783,7 +779,7 @@ impl HistogramKernel {
         let stream = self.device.stream();
 
         // Zero output histograms
-        let zero_blocks = ((output_size + 255) / 256) as u32;
+        let zero_blocks = output_size.div_ceil(256) as u32;
         let zero_config = LaunchConfig {
             block_dim: (256, 1, 1),
             grid_dim: (zero_blocks, 1, 1),
@@ -864,11 +860,9 @@ impl HistogramKernel {
                         let mut hess = [0.0f32; 256];
                         let mut counts = [0u32; 256];
 
-                        for bin in 0..256 {
-                            grads[bin] = grad_hist[base + bin];
-                            hess[bin] = hess_hist[base + bin];
-                            counts[bin] = count_hist[base + bin];
-                        }
+                        grads.copy_from_slice(&grad_hist[base..base + 256]);
+                        hess.copy_from_slice(&hess_hist[base..base + 256]);
+                        counts.copy_from_slice(&count_hist[base..base + 256]);
 
                         Histogram::from_raw_arrays(&grads, &hess, &counts)
                     })

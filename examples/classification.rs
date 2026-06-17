@@ -187,7 +187,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("7. Probability Distribution:");
 
     // Probability bins
-    let mut prob_bins = vec![0usize; 10];
+    let mut prob_bins = [0usize; 10];
     for prob in &probabilities {
         let bin = ((prob * 10.0).min(9.0)) as usize;
         prob_bins[bin] += 1;

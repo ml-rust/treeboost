@@ -553,7 +553,7 @@ fn test_multilabel_predictions_shape() {
     let proba = model.predict_proba_multilabel(&dataset);
     for row in &proba {
         for &p in row {
-            assert!(p >= 0.0 && p <= 1.0, "Probability out of range: {}", p);
+            assert!((0.0..=1.0).contains(&p), "Probability out of range: {}", p);
         }
     }
 
@@ -604,7 +604,7 @@ fn test_predict_multilabel() {
         assert_eq!(row_proba.len(), num_outputs);
         for &p in row_proba {
             assert!(
-                p >= 0.0 && p <= 1.0,
+                (0.0..=1.0).contains(&p),
                 "Probability must be in [0, 1], got {}",
                 p
             );
@@ -639,7 +639,7 @@ fn test_predict_labels_with_threshold() {
     for row in &proba {
         for &p in row {
             assert!(
-                p >= 0.0 && p <= 1.0,
+                (0.0..=1.0).contains(&p),
                 "Probability should be in [0, 1], got {}",
                 p
             );
@@ -953,7 +953,7 @@ fn test_vector_tree_predictions_quality() {
     // 1. All probabilities in valid range [0, 1]
     for row in &proba {
         for &p in row {
-            assert!(p >= 0.0 && p <= 1.0, "Invalid probability: {}", p);
+            assert!((0.0..=1.0).contains(&p), "Invalid probability: {}", p);
         }
     }
 

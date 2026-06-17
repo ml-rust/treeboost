@@ -109,11 +109,7 @@ impl GBDTModel {
         config: GBDTConfig,
         feature_names: Option<Vec<String>>,
     ) -> Result<Self> {
-        let num_rows = if num_features > 0 {
-            features.len() / num_features
-        } else {
-            0
-        };
+        let num_rows = features.len().checked_div(num_features).unwrap_or(0);
 
         if num_rows == 0 || num_features == 0 {
             return Err(TreeBoostError::Config("Empty dataset".to_string()));
@@ -313,11 +309,7 @@ impl GBDTModel {
         config: GBDTConfig,
         feature_names: Option<Vec<String>>,
     ) -> Result<Self> {
-        let num_rows = if num_features > 0 {
-            features.len() / num_features
-        } else {
-            0
-        };
+        let num_rows = features.len().checked_div(num_features).unwrap_or(0);
 
         if num_rows == 0 || num_features == 0 {
             return Err(TreeBoostError::Config("Empty dataset".to_string()));
@@ -585,9 +577,9 @@ impl GBDTModel {
         validation_indices: &[usize],
         calibration_indices: &[usize],
         base_prediction: f32,
-        predictions: &mut Vec<f32>,
-        gradients: &mut Vec<f32>,
-        hessians: &mut Vec<f32>,
+        predictions: &mut [f32],
+        gradients: &mut [f32],
+        hessians: &mut [f32],
         tree_grower: TreeGrower,
         trees: &mut Vec<Tree>,
         rng: &mut rand::rngs::StdRng,
@@ -596,7 +588,7 @@ impl GBDTModel {
         rounds_without_improvement: &mut usize,
         best_num_trees: &mut usize,
         sample_indices: &mut Vec<usize>,
-        shuffle_buffer: &mut Vec<usize>,
+        shuffle_buffer: &mut [usize],
         goss_indexed: &mut Vec<(usize, f32)>,
         use_fused: bool,
         #[cfg(feature = "cuda")] cuda_builder: &mut Option<FullCudaTreeBuilder>,
@@ -615,7 +607,7 @@ impl GBDTModel {
             .with_entropy_weight(config.entropy_weight)
             .with_min_gain(config.min_gain);
 
-        for round in 0..config.num_rounds {
+        for _round in 0..config.num_rounds {
             // Grow tree - either fused, Full GPU, or separate gradient+histogram paths
             #[allow(unused_mut, unused_assignments)]
             let mut tree: Option<Tree> = None;
@@ -643,7 +635,7 @@ impl GBDTModel {
                         config.learning_rate,
                         &split_finder,
                         config.colsample,
-                        config.seed.wrapping_add(round as u64),
+                        config.seed.wrapping_add(_round as u64),
                     ));
                 }
             }
@@ -670,7 +662,7 @@ impl GBDTModel {
                         config.learning_rate,
                         &split_finder,
                         config.colsample,
-                        config.seed.wrapping_add(round as u64),
+                        config.seed.wrapping_add(_round as u64),
                     ));
                 }
             }
@@ -754,8 +746,8 @@ impl GBDTModel {
             }
 
             // Update predictions with the new tree
-            for idx in 0..predictions.len() {
-                predictions[idx] += tree.predict(|f| dataset.get_bin(idx, f));
+            for (idx, pred) in predictions.iter_mut().enumerate() {
+                *pred += tree.predict(|f| dataset.get_bin(idx, f));
             }
 
             trees.push(tree);
@@ -777,7 +769,7 @@ impl GBDTModel {
                     *best_val_loss = val_loss;
                     *best_num_trees = trees.len();
                     *rounds_without_improvement = 0;
-                    if trees.len() % 50 == 0 {
+                    if trees.len().is_multiple_of(50) {
                         eprintln!(
                             "[ES] Round {}: val_loss={:.6} (NEW BEST), best_trees={}",
                             trees.len(),
@@ -787,7 +779,7 @@ impl GBDTModel {
                     }
                 } else {
                     *rounds_without_improvement += 1;
-                    if trees.len() % 50 == 0
+                    if trees.len().is_multiple_of(50)
                         || *rounds_without_improvement == config.early_stopping_rounds
                     {
                         eprintln!(
@@ -1089,6 +1081,7 @@ impl GBDTModel {
     /// * `dataset` - Multi-output binned dataset (targets row-wise flattened)
     /// * `config` - Training configuration with multi-label loss
     /// * `num_outputs` - Number of labels/outputs
+    ///
     /// Train multi-label model using unified Vector Trees
     ///
     /// Uses `VectorTreeGrower` to produce one `VectorTree` per round where each leaf

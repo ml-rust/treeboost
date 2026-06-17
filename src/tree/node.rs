@@ -193,7 +193,7 @@ mod tests {
         assert!((v - 5.5).abs() < 1e-10);
         assert_eq!(l, 1);
         assert_eq!(r, 2);
-        assert_eq!(d, true);
+        assert!(d);
         assert!((g - 10.5).abs() < 1e-6);
     }
 

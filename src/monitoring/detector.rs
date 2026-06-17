@@ -170,11 +170,7 @@ impl ShiftDetector {
         num_features: usize,
         feature_names: Option<&[String]>,
     ) -> Self {
-        let num_rows = if num_features > 0 {
-            features.len() / num_features
-        } else {
-            0
-        };
+        let num_rows = features.len().checked_div(num_features).unwrap_or(0);
 
         // For raw data without binning info, use MAX_HISTOGRAM_BINS as default
         let bins_per_feature = vec![MAX_HISTOGRAM_BINS; num_features];

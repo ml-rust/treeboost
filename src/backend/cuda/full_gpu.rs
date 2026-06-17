@@ -18,7 +18,6 @@ use crate::histogram::Histogram;
 use crate::tree::{Node, NodeType, SplitInfo, Tree};
 use crate::utils::approx_equal_relative;
 use cudarc::driver::CudaSlice;
-use rand::SeedableRng;
 use std::sync::Arc;
 
 /// Full CUDA tree builder using level-wise growth with GPU-resident data.
