@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="images/treeboost.jpeg" alt="TreeBoost" width="640">
+
 # treeboost
 
 <h3>Gradient-boosted decision trees for tabular data, in Rust.</h3>
