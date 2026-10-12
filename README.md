@@ -1,126 +1,121 @@
-# TreeBoost
+<div align="center">
 
-[![Crates.io](https://img.shields.io/crates/v/treeboost.svg)](https://crates.io/crates/treeboost) [![Docs](https://img.shields.io/docsrs/treeboost)](https://docs.rs/treeboost) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+# treeboost
 
-![TreeBoost](images/treeboost.jpeg)
+<h3>Gradient-boosted decision trees for tabular data, in Rust.</h3>
 
-> **Practical tabular ML for messy, real-world data. Fast baselines first, deep control when you need it.**
+<p>
+Trains a baseline model in one call and exposes full control over boosting modes, configs, and backends. Backends: Scalar, AVX-512, SVE2, WGPU, and CUDA.
+</p>
 
-TreeBoost is a Rust-first library for tabular machine learning that starts simple and scales to expert use. It is built for the reality of real-world datasets: time series, missing values, drift, mixed feature types, and noisy labels. You get a clean path from “just give me a working model” to full control over training, backends, and constraints.
+<p>
+  <a href="https://docs.rs/treeboost"><strong>Docs</strong></a>
+  ·
+  <a href="https://crates.io/crates/treeboost"><strong>Crate</strong></a>
+  ·
+  <a href="#models"><strong>Models</strong></a>
+  ·
+  <a href="#backends"><strong>Backends</strong></a>
+  ·
+  <a href="#quick-start"><strong>Example</strong></a>
+  ·
+  <a href="CONTRIBUTING.md"><strong>Contributing</strong></a>
+</p>
 
-## At a Glance
+<p>
+  <a href="https://discord.gg/jBhFk9kHPg">
+    <img src="https://img.shields.io/discord/1453357769720594543?label=Discord&logo=discord&logoColor=white&color=5865F2" alt="Join the Discord">
+  </a>
+</p>
 
-- AutoML and AutoTuner for fast, explainable baselines
-- Multi-label, multi-class, and regression in one API
-- Hybrid Linear+Tree mode for trend extrapolation + non-linear interactions
-- Built-in preprocessing that serializes with your model
-- GPU acceleration (WebGPU, CUDA) plus AVX-512/SVE2 CPU backends
-- Zero-copy serialization and incremental TRB updates
+<p>
+  <a href="https://crates.io/crates/treeboost">
+    <img src="https://img.shields.io/crates/v/treeboost" alt="crates.io">
+  </a>
+  <a href="https://docs.rs/treeboost">
+    <img src="https://img.shields.io/docsrs/treeboost" alt="docs.rs">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/crates/l/treeboost" alt="License">
+  </a>
+  <a href="https://github.com/ml-rust/treeboost/stargazers">
+    <img src="https://img.shields.io/github/stars/ml-rust/treeboost?style=social" alt="GitHub stars">
+  </a>
+</p>
 
-## Why TreeBoost
+</div>
 
-Most libraries are tuned for leaderboard-style modeling. TreeBoost is built for shipping models:
+TreeBoost trains gradient-boosted tree models for tabular data. It handles time series, missing values, mixed feature types, and multi-label targets. It provides a Rust API, a CLI, and Python bindings. See [docs/API.md](docs/API.md) for the full API reference.
 
-- **Fast baseline in one call** for beginners and teams under time pressure.
-- **White-box AutoML** that explains why it chose a mode and lets you iterate.
-- **Upgradeable control** without rewriting your data pipeline.
-- **Deployment-friendly**: zero-copy serialization, fast inference, and a CLI for batch jobs.
+## Quick Start
 
-## Three API Levels (Start Simple, Go Deep)
+Add the library to a Rust project:
 
-- **AutoModel** — One call trains a solid baseline and produces a model you can ship. Export a `config.json` when you want to improve it later.
-- **UniversalModel** — Choose the learning mode (PureTree, LinearThenTree, RandomForest) and tune it without leaving a high-level API.
-- **GBDTModel** — Lowest-level API for maximum control, backend selection, and benchmarking.
-
-You can move between these levels without changing your dataset format.
-
-📖 **See [docs/API.md](docs/API.md) for complete API documentation with examples.**
-
-## Recommended Workflow
-
-1. **AutoModel** for a strong baseline and a training report.
-2. **Inspect the report and config** to understand the model choice.
-3. **Refine with UniversalModel or GBDTModel** for extra accuracy, constraints, or incremental updates.
-
-## Quick Start (AutoModel)
-
-```rust
-use treeboost::{auto_train, AutoModel};
-
-let model = auto_train(&df, "target")?;
-println!("{}", model.summary());
-
-model.save("model.rkyv")?;
-model.save_config("config.json")?;
+```bash
+cargo add treeboost
 ```
 
-This gives you a deployable model plus a config you can tweak later.
-
-## Expected Outputs (After Training)
-
-After training, you typically save:
-
-- `model.rkyv` for fast inference and deployment
-- `config.json` for reproducible retraining or fine-tuning
-- `model.trb` if you want incremental updates later
+Train a baseline from a CSV file and save it:
 
 ```rust
-let model = auto_train(&df, "target")?;
-model.save("model.rkyv")?;
-model.save_config("config.json")?;
-model.save_trb("model.trb", "initial training")?;
-```
+use treeboost::auto_train_csv;
 
-**Example `config.json` (abridged):**
+fn main() -> treeboost::Result<()> {
+    let model = auto_train_csv("data.csv", "target")?;
+    println!("{}", model.summary());
 
-```json
-{
-  "mode": "LinearThenTree",
-  "num_rounds": 120,
-  "learning_rate": 0.1,
-  "subsample": 0.9,
-  "validation_ratio": 0.1,
-  "early_stopping_rounds": 20,
-  "linear_rounds": 10,
-  "tree_config": {
-    "max_depth": 6,
-    "max_leaves": 31,
-    "lambda": 1.0,
-    "min_samples_leaf": 20,
-    "colsample": 0.8
-  },
-  "linear_config": {
-    "lambda": 1.0,
-    "l1_ratio": 0.0,
-    "shrinkage_factor": 0.3
-  }
+    model.save("model.rkyv")?;
+    model.save_config("config.json")?;
+    model.save_trb("model.trb", "initial training")?;
+    Ok(())
 }
 ```
 
-The actual file includes the full set of tree/linear fields so you can tweak every detail.
+Training writes three files:
 
-## Inference (Simple and Fast)
+| File          | Contents                                          |
+| ------------- | ------------------------------------------------- |
+| `model.rkyv`  | Model for inference and deployment                |
+| `config.json` | `UniversalConfig` of the run. See [docs/config.md](docs/config.md). |
+| `model.trb`   | Model with an update history for incremental learning |
+
+## Models
+
+TreeBoost has three API levels. You can move between them without changing your dataset format.
+
+| Model            | Use it for                                                                |
+| ---------------- | ------------------------------------------------------------------------- |
+| `AutoModel`      | One call trains a baseline and reports the chosen mode.                   |
+| `UniversalModel` | Choose a `BoostingMode` and tune `UniversalConfig` without low-level code. |
+| `GBDTModel`      | Full control over `GBDTConfig`, backend selection, and benchmarks.        |
+
+Use this workflow:
+
+1. Train with `AutoModel` for a baseline and a training report.
+2. Read the report and `config.json` to see the chosen mode.
+3. Refine with `UniversalModel` or `GBDTModel` for accuracy, constraints, or incremental updates.
+
+### Inference
+
+Load a saved model and predict on a DataFrame with the training feature columns:
 
 ```rust
 use treeboost::UniversalModel;
-use treeboost::dataset::DatasetLoader;
 
-// Use either a static model (.rkyv) or incremental model (.trb)
 let model = UniversalModel::load("model.rkyv")?;
-// let model = UniversalModel::load_trb("model.trb")?;
-
-let loader = DatasetLoader::new(255);
-let dataset = loader.load_parquet("new_data.parquet", "target", None)?;
-
-let predictions = model.predict(&dataset);
+let predictions = model.predict_df(&df)?;
 ```
 
-## Quick Start (UniversalModel)
+Load a TRB file with `UniversalModel::load_trb("model.trb")?` instead.
+
+### UniversalModel
+
+`UniversalModel::train` takes a `BinnedDataset`. `DatasetLoader` creates it from Parquet or CSV.
 
 ```rust
-use treeboost::{UniversalConfig, UniversalModel, BoostingMode};
 use treeboost::dataset::DatasetLoader;
 use treeboost::loss::MseLoss;
+use treeboost::{BoostingMode, UniversalConfig, UniversalModel};
 
 let loader = DatasetLoader::new(255);
 let dataset = loader.load_parquet("data.parquet", "target", None)?;
@@ -129,44 +124,23 @@ let config = UniversalConfig::new()
     .with_mode(BoostingMode::LinearThenTree)
     .with_num_rounds(100)
     .with_linear_rounds(10)
-    .with_learning_rate(0.1);
+    .with_learning_rate(0.1)?;
 
 let model = UniversalModel::train(&dataset, config, &MseLoss)?;
 let predictions = model.predict(&dataset);
 ```
 
-**Quick mode selection:**
+Choose the mode from the shape of your data:
 
-| Your Data                                  | Use This Mode                  |
+| Your data                                  | Mode                           |
 | ------------------------------------------ | ------------------------------ |
-| General tabular, categoricals              | `BoostingMode::PureTree`       |
-| Time-series, trending, needs extrapolation | `BoostingMode::LinearThenTree` |
-| Noisy data, want robustness                | `BoostingMode::RandomForest`   |
+| General tabular data with categoricals     | `BoostingMode::PureTree`       |
+| Time series, trends, and extrapolation     | `BoostingMode::LinearThenTree` |
+| Noisy data with a variance-reduction goal  | `BoostingMode::RandomForest`   |
 
-## Quick Start (Multi-Label Classification)
+### GBDTModel
 
-For problems where each sample can belong to multiple independent labels (e.g., multi-tag classification, multiple disease diagnoses):
-
-```rust
-use treeboost::AutoModel;
-
-// Train multi-label model (default: LinearThenTree mode)
-let target_cols = vec!["tag_finance", "tag_tech", "tag_urgent"];
-let model = AutoModel::train_multilabel(&df, &target_cols)?;
-
-// Predictions with probabilities
-let probs = model.predict_proba_multilabel(&df)?;  // Vec<Vec<f32>>
-
-// Predictions with labels (threshold 0.5)
-let labels = model.predict_labels(&df)?;  // Vec<Vec<bool>>
-
-// Tune thresholds on validation set for better F1 scores
-let mut model = AutoModel::train_multilabel(&df, &target_cols)?;
-let tune_result = model.tune_thresholds(&val_df, &target_cols)?;
-let labels = model.predict_labels_tuned(&df)?;  // Uses tuned thresholds
-```
-
-## Quick Start (GBDTModel)
+`GBDTModel::train` takes a flat `f32` slice. Each row holds `num_features` values.
 
 ```rust
 use treeboost::{GBDTConfig, GBDTModel};
@@ -179,148 +153,97 @@ let config = GBDTConfig::new()
 let model = GBDTModel::train(&features, num_features, &targets, config, None)?;
 ```
 
-## Python (GBDTModel)
+### Multi-label classification
 
-```python
-import numpy as np
-from treeboost import GBDTConfig, GBDTModel
+For samples with several independent labels, use `AutoModel::train_multilabel`. See [docs/features.md](docs/features.md#multi-label-classification) for the example.
 
-X = np.random.randn(10000, 20).astype(np.float32)
-y = (X[:, 0] + X[:, 1] * 2 + np.random.randn(10000) * 0.1).astype(np.float32)
+## Backends
 
-config = GBDTConfig()
-config.num_rounds = 100
-config.max_depth = 6
-config.learning_rate = 0.1
-
-model = GBDTModel.train(X, y, config)
-```
-
-## What You Get
-
-- **AutoML mode selection** that evaluates probes and explains its choice.
-- **Hybrid Linear+Tree architecture** for trend extrapolation and interactions.
-- **Built-in preprocessing**: encoders, scalers, and imputers that serialize with the model.
-- **Linear Trees** for piecewise-linear data with far fewer trees.
-- **Conformal prediction** for uncertainty intervals.
-- **Incremental learning** via TRB format with drift detection.
-
-## Advanced Features
-
-TreeBoost includes battle-tested capabilities for real-world deployments.
-
-### Feature Matrix
-
-| Category           | Capability                        | Use Case                              | API Entry Point                              |
-| ------------------ | --------------------------------- | ------------------------------------- | -------------------------------------------- |
-| **Classification** | Multi-Label Classification        | Multi-tag prediction, multi-diagnosis | `AutoModel::train_multilabel()`              |
-|                    | Threshold Tuning                  | Per-label F1 optimization             | `model.tune_thresholds()`                    |
-|                    | Multi-Class Classification        | Single category prediction            | `AutoModel::train()` with softmax loss       |
-| **Model Updates**  | Incremental Learning (TRB format) | Daily model updates, streaming data   | `UniversalModel::update()`                   |
-|                    | O(1) Append Updates               | Efficient model versioning            | `save_trb_update()`                          |
-|                    | Memory-Mapped I/O                 | Large model inference                 | `MmapTrbReader` (mmap feature)               |
-| **Monitoring**     | Drift Detection (PSI, KL, KS)     | Distribution shift alerts             | `IncrementalDriftDetector`                   |
-|                    | Drift History Tracking            | Long-term monitoring                  | `DriftHistory`                               |
-| **Ensembles**      | Multi-Seed Training               | Variance reduction                    | `with_ensemble_seeds()`                      |
-|                    | Stacked Blending                  | Meta-learner combination              | `StackingStrategy::Ridge`                    |
-| **Constraints**    | Monotonic Constraints             | Domain knowledge enforcement          | `TreeConfig::with_monotonic_constraints()`   |
-|                    | Interaction Constraints           | Feature interaction control           | `TreeConfig::with_interaction_constraints()` |
-| **Encoding**       | Ordered Target Encoding           | High-cardinality categoricals         | `OrderedTargetEncoder`                       |
-|                    | Count-Min Sketch Filtering        | Rare category handling                | `CategoryFilter`                             |
-| **Features**       | Time-Series (Lag/Rolling/EWMA)    | Panel data, forecasting               | `LagGenerator`, `RollingGenerator`           |
-|                    | Cross-Sectional (Poly/Ratio)      | Feature engineering                   | `PolynomialGenerator`, `RatioGenerator`      |
-| **Preprocessing**  | Incremental Scaler (Welford)      | Adaptive preprocessing                | `StandardScaler::with_forget_factor()`       |
-|                    | Outlier Detection (IQR/Z-score)   | Robust pipelines                      | `OutlierDetector`, `RobustScaler`            |
-| **Uncertainty**    | Split Conformal Prediction        | Distribution-free intervals           | `GBDTConfig::with_conformal()`               |
-
-### Example: Incremental Learning Workflow
+TreeBoost selects a backend automatically. Set `BackendType` to override the choice.
 
 ```rust
-use treeboost::{AutoModel, UniversalModel};
-use treeboost::monitoring::IncrementalDriftDetector;
-use treeboost::loss::MseLoss;
-
-// 1. Initial training
-let auto = AutoModel::train(&df, "target")?;
-auto.inner().save_trb("model.trb", "Initial training")?;
-
-// 2. Production: Load and monitor for drift
-let mut model = UniversalModel::load_trb("model.trb")?;
-let detector = IncrementalDriftDetector::from_dataset(&train_data);
-
-// 3. Before updating, check for drift
-let result = detector.check_update(&new_data);
-if !result.has_critical_drift() {
-    let report = model.update(&new_data, &MseLoss, 10)?;
-    model.save_trb_update("model.trb", new_data.num_rows(), "Weekly update")?;
-} else {
-    eprintln!("Critical drift detected: {}", result);
-}
-```
-
-### Why These Features Matter
-
-- **Incremental Learning**: Update models in O(new_data) instead of O(total_data) - essential for daily retraining
-- **Drift Detection**: Catch distribution shifts before they degrade model performance
-- **Ensemble Methods**: Reduce variance and improve stability in noisy environments
-- **Constraints**: Enforce domain knowledge (e.g., "age must increase risk") for trust and interpretability
-- **High-Cardinality Encoding**: Handle millions of categories without memory explosion
-- **Time-Series Features**: Automatic lag/rolling/EWMA generation for panel data
-- **Conformal Prediction**: Valid uncertainty estimates regardless of data distribution
-
-📖 **For detailed API documentation with examples, see [docs/API.md](docs/API.md)**
-
-## Backends (Automatic by Default)
-
-TreeBoost auto-selects the fastest backend. You can override it if needed.
-
-```rust
-use treeboost::{GBDTConfig, GBDTModel};
 use treeboost::backend::BackendType;
+use treeboost::{GBDTConfig, GBDTModel};
 
-let config = GBDTConfig::new()
-    .with_backend(BackendType::Scalar);
-
+let config = GBDTConfig::new().with_backend(BackendType::Scalar);
 let model = GBDTModel::train(&features, num_features, &targets, config, None)?;
 ```
 
-Supported backends: Scalar, AVX-512, SVE2, WGPU, CUDA.
+`BackendType::Auto` is the default. It selects the first available backend in this order:
+
+| Priority | Backend  | Requirement                  |
+| -------- | -------- | ---------------------------- |
+| 1        | CUDA     | `cuda` feature               |
+| 2        | WGPU     | `gpu` feature                |
+| 3        | AVX-512  | x86-64 CPU with AVX-512      |
+| 4        | SVE2     | ARM CPU with SVE2            |
+| 5        | Scalar   | None. Used when no other backend is available. |
 
 ## CLI
 
+Install the `treeboost` binary:
+
 ```bash
-# Train a model
+cargo install treeboost
+```
+
+Train, predict, and inspect a model:
+
+```bash
 treeboost train --data data.csv --target price --output model.rkyv
-
-# Predict
 treeboost predict --model model.rkyv --data test.csv --output predictions.json
-
-# Predict (.trb)
-treeboost predict --model model.trb --data test.csv --output predictions.json
+treeboost info --model model.rkyv --importances
 ```
 
-Run `treeboost --help` for full options.
+The `train` and `predict` commands accept Parquet or CSV input. The `train` command writes `.trb` output when `--output` ends in `.trb`.
 
-## Installation
+| Command   | Required flags                                    |
+| --------- | ------------------------------------------------- |
+| `train`   | `-d, --data <path>`, `-t, --target <column>`, `-o, --output <path>` |
+| `predict` | `-m, --model <path>`, `-d, --data <path>`, `-o, --output <path>` |
+| `info`    | `-m, --model <path>` (`--importances` shows feature importance) |
+
+Run `treeboost <command> --help` for all flags.
+
+## Python
+
+TreeBoost ships Python bindings for `GBDTConfig` and `GBDTModel`. Build them from source with the `python` feature. See [docs/python.md](docs/python.md) for the build steps and an example.
+
+## Features
+
+- **AutoML mode selection:** `AutoModel` runs probes and reports the mode it chose.
+- **Hybrid linear and tree mode:** `LinearThenTree` fits trends and trees together.
+- **Preprocessing with the model:** encoders, scalers, and imputers save with the model.
+- **Conformal prediction:** prediction intervals from split conformal calibration.
+- **Incremental learning:** TRB files store updates, and drift checks run before each update.
+
+## Installation and Feature Flags
 
 ```bash
-cargo add treeboost
+cargo add treeboost --features gpu
 ```
 
-```bash
-# Python bindings (requires Rust toolchain + maturin)
-pip install treeboost
-```
+| Feature  | Enables                                                 |
+| -------- | ------------------------------------------------------- |
+| `gpu`    | WGPU backend for Vulkan, Metal, and DX12 GPUs           |
+| `cuda`   | CUDA backend. Implies `gpu`.                            |
+| `mmap`   | Memory-mapped TRB reading with `MmapTrbReader`          |
+| `python` | PyO3 Python bindings                                    |
 
-Feature flags: `gpu`, `cuda`, `mmap`, `python`.
+## Documentation
 
-## Project Links
+- [API Reference](docs/API.md): types, methods, and examples
+- [Advanced Features](docs/features.md): feature matrix and incremental learning
+- [Saved Config](docs/config.md): fields of the saved `config.json`
+- [Python Bindings](docs/python.md): build steps and example
+- [Preset Guide](docs/PRESET_GUIDE.md): choosing a preset
 
-- **API Reference**: [docs/API.md](docs/API.md) - Complete API documentation with examples
-- Docs: https://docs.rs/treeboost
-- Crate: https://crates.io/crates/treeboost
-- GitHub: https://github.com/ml-rust/treeboost
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and checks.
+
+Questions and design discussion happen on [Discord](https://discord.gg/jBhFk9kHPg).
 
 ## License
 
-Apache License 2.0
+Licensed under Apache-2.0. See [LICENSE](LICENSE).
