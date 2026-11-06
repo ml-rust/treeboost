@@ -2,7 +2,7 @@
 name = "treeboost"
 version = "0.1.0"
 edition = "2021"
-description = "High-performance Gradient Boosted Decision Tree engine for large-scale tabular data"
+description = "Gradient boosting library for tabular data in Rust: gradient boosted trees, linear-then-tree hybrids and random forests, on CPU, WebGPU and CUDA"
 license = "Apache-2.0"
 repository = "https://github.com/ml-rust/treeboost"
 homepage = "https://github.com/ml-rust/treeboost"
@@ -12,7 +12,7 @@ keywords = [
   "gbdt",
   "gradient-boosting",
   "decision-tree",
-  "xgboost",
+  "random-forest",
 ]
 categories = ["science", "algorithms", "command-line-utilities"]
 readme = "README.md"
