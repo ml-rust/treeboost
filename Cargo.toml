@@ -1,6 +1,6 @@
 [package]
 name = "treeboost"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Gradient boosting library for tabular data in Rust: gradient boosted trees, linear-then-tree hybrids and random forests, on CPU, WebGPU and CUDA"
 license = "Apache-2.0"
