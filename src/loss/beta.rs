@@ -342,11 +342,15 @@ mod tests {
     fn test_digamma_values() {
         // Test known values (approximate)
         let psi_1 = BetaLoss::digamma(1.0);
-        assert!((psi_1 + 0.5772).abs() < 0.01, "ψ(1) ≈ -γ, got {}", psi_1);
+        assert!(
+            (psi_1 + std::f32::consts::EULER_GAMMA).abs() < 0.01,
+            "ψ(1) ≈ -γ, got {}",
+            psi_1
+        );
 
         let psi_2 = BetaLoss::digamma(2.0);
         assert!(
-            (psi_2 - (1.0 - 0.5772)).abs() < 0.01,
+            (psi_2 - (1.0 - std::f32::consts::EULER_GAMMA)).abs() < 0.01,
             "ψ(2) ≈ 1-γ, got {}",
             psi_2
         );

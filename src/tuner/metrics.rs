@@ -258,7 +258,7 @@ pub fn compute_rank_ic(predictions: &[f32], targets: &[f32], era_indices: Option
     let mut ic_sum = 0.0;
     let mut valid_eras = 0;
 
-    for (_era_id, (era_preds, era_targets)) in era_groups.iter() {
+    for (era_preds, era_targets) in era_groups.values() {
         if era_preds.len() < 2 {
             continue; // Skip eras with < 2 samples
         }

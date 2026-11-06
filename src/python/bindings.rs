@@ -105,7 +105,7 @@ fn parse_model_format(format: &str) -> PyResult<ModelFormat> {
 /// config = config.with_monotonic_constraints(constraints)
 /// ```
 #[pyclass(from_py_object, name = "MonotonicConstraint", eq)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct PyMonotonicConstraint {
     inner: MonotonicConstraint,
 }

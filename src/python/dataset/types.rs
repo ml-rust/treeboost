@@ -9,7 +9,7 @@ use crate::dataset::{BinnedDataset, FeatureInfo, FeatureType};
 
 /// Python wrapper for FeatureType enum
 #[pyclass(from_py_object, name = "FeatureType", eq)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct PyFeatureType {
     inner: FeatureType,
 }
