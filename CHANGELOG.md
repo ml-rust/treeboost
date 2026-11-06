@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-06
+
+### Changed
+
+- `0.1.1`: its tag was never published, and this release carries its changes. Use 0.1.2.
+- `PyMonotonicConstraint`, `PyFeatureType`: lose `Copy`. A Rust caller clones them.
+
 ## [0.1.1] - 2026-11-06
 
 ### Changed
