@@ -2,7 +2,7 @@
 //!
 //! Provides a unified `EnsembleTree` enum that can hold either:
 //! - `Tree` (scalar f32 leaf values) for regression/binary/multi-class
-//! - `VectorTree` (Vec<f32> leaf values) for multi-label with unified splits
+//! - `VectorTree` (`Vec<f32>` leaf values) for multi-label with unified splits
 //!
 //! This allows `GBDTModel` to support both approaches transparently.
 
@@ -20,7 +20,7 @@ pub enum EnsembleTree {
     /// Used for: regression, binary classification, multi-class (one-vs-all)
     Scalar(Tree),
 
-    /// Vector tree with Vec<f32> leaf values
+    /// Vector tree with `Vec<f32>` leaf values
     /// Used for: multi-label with unified splits (all labels share same tree structure)
     Vector(VectorTree),
 }

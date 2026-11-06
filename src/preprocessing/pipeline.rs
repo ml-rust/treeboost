@@ -24,7 +24,7 @@
 //!
 //! # Custom Preprocessors
 //!
-//! You can create custom preprocessors by implementing [`PreprocessorTrait`](super::traits::PreprocessorTrait)
+//! You can create custom preprocessors by implementing [`PreprocessorTrait`]
 //! and registering them with [`register_preprocessor`](super::registry::register_preprocessor):
 //!
 //! ```ignore
@@ -155,7 +155,7 @@ pub enum Preprocessor {
     /// - `instance`: Cached runtime instance (not serialized, reconstructed on load)
     ///
     /// To create a custom preprocessor:
-    /// 1. Implement [`PreprocessorTrait`](super::traits::PreprocessorTrait)
+    /// 1. Implement [`PreprocessorTrait`]
     /// 2. Call [`register_preprocessor`](super::registry::register_preprocessor) at startup
     /// 3. Use [`Preprocessor::custom()`] to create the Custom variant
     Custom {

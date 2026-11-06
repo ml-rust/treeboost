@@ -52,7 +52,7 @@ pub struct GBDTModel {
     ///
     /// **Multi-label (Unified Vector Tree)**: One vector tree per round.
     /// - `trees[round]` = `EnsembleTree::Vector(tree)` for round `round`
-    /// - Each leaf contains Vec<f32> of length N (one value per label)
+    /// - Each leaf contains `Vec<f32>` of length N (one value per label)
     ///
     /// Total trees = `num_rounds` (regression/binary/multi-label) or `num_rounds * K` (multi-class)
     pub(super) trees: Vec<EnsembleTree>,
@@ -216,7 +216,7 @@ impl GBDTModel {
 
     /// Create a GBDTModel from vector trees (unified multi-label)
     ///
-    /// Each vector tree has leaves with Vec<f32> values (one per label).
+    /// Each vector tree has leaves with `Vec<f32>` values (one per label).
     pub fn from_vector_trees(
         config: GBDTConfig,
         base_predictions: Vec<f32>,

@@ -591,7 +591,7 @@ pub struct AutoConfig {
     /// Custom UniversalConfig to use (bypasses tuning if provided with TuningLevel::None)
     pub custom_config: Option<crate::model::UniversalConfig>,
 
-    /// Ensemble mode (replaces ensemble: Option<AutoEnsembleConfig>)
+    /// Ensemble mode (replaces `ensemble: Option<AutoEnsembleConfig>`)
     pub ensemble: EnsembleMode,
 
     /// Custom tree tuner configuration (overrides tuning_level for tree-based modes)
@@ -996,7 +996,7 @@ impl AutoConfig {
 
     /// Set explicit target bounds for bounded regression (deprecated)
     ///
-    /// **Deprecated:** Use [`with_target_bound_config`] instead for more control.
+    /// **Deprecated:** Use [`Self::with_target_bound_config`] instead for more control.
     ///
     /// This method is equivalent to `with_target_bound_config(TargetBoundConfig::Logit { min, max })`.
     #[deprecated(since = "0.2.0", note = "Use with_target_bound_config() instead")]

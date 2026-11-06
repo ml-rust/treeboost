@@ -200,7 +200,7 @@ impl GBDTModel {
     /// Predict raw scores for multi-label classification
     ///
     /// Supports two storage modes:
-    /// - **Vector Trees (new)**: One VectorTree per round, each leaf has Vec<f32> values
+    /// - **Vector Trees (new)**: One VectorTree per round, each leaf has `Vec<f32>` values
     /// - **Scalar Trees (legacy)**: N scalar trees per round, stored round-major
     ///
     /// # Returns

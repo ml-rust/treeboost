@@ -314,7 +314,7 @@ impl AutoBuilder {
 
     /// Set explicit target bounds for bounded regression (deprecated)
     ///
-    /// **Deprecated:** Use [`with_target_bound_config`] instead for more control.
+    /// **Deprecated:** Use [`Self::with_target_bound_config`] instead for more control.
     #[deprecated(since = "0.2.0", note = "Use with_target_bound_config() instead")]
     #[allow(deprecated)]
     pub fn with_target_bounds(mut self, min: f32, max: f32) -> Self {
