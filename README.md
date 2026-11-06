@@ -47,7 +47,17 @@ Trains a baseline model in one call and exposes full control over boosting modes
 
 </div>
 
-TreeBoost trains gradient-boosted tree models for tabular data. It handles time series, missing values, mixed feature types, and multi-label targets. It provides a Rust API, a CLI, and Python bindings. See [docs/API.md](docs/API.md) for the full API reference.
+TreeBoost is a gradient boosting library for tabular data, in Rust. It trains gradient-boosted decision trees, linear-then-tree hybrids, and random forests. It handles time series, missing values, mixed feature types, and multi-label targets. It provides a Rust API, a CLI, and Python bindings. See [docs/API.md](docs/API.md) for the full API reference.
+
+- **Language:** training and inference run in Rust. Python is optional and only wraps the Rust code.
+- **Built on:** `polars` for data, `rayon` for threads, `rkyv` for model files, and `faer` for linear algebra. The bin-bundling step follows the LightGBM exclusive feature bundling algorithm.
+- **Input:** CSV and Parquet files, or a `polars` DataFrame.
+- **Output:** rkyv and TRB model files.
+
+### Not supported yet
+
+- Export to ONNX or the XGBoost format.
+- `AutoModel` and `UniversalModel` in Python. The bindings cover `GBDTModel`, `GBDTConfig`, `AutoTuner`, and the dataset pipeline types.
 
 ## Quick Start
 
@@ -109,6 +119,8 @@ let predictions = model.predict_df(&df)?;
 ```
 
 Load a TRB file with `UniversalModel::load_trb("model.trb")?` instead.
+
+A model saves to rkyv or TRB and predicts through TreeBoost. There is no ONNX or XGBoost export.
 
 ### UniversalModel
 
@@ -209,7 +221,7 @@ Run `treeboost <command> --help` for all flags.
 
 ## Python
 
-TreeBoost ships Python bindings for `GBDTConfig` and `GBDTModel`. Build them from source with the `python` feature. See [docs/python.md](docs/python.md) for the build steps and an example.
+TreeBoost ships Python bindings for `GBDTConfig`, `GBDTModel`, `AutoTuner`, and the dataset pipeline types. Build them from source with the `python` feature. See [docs/python.md](docs/python.md) for the build steps and an example.
 
 ## Features
 

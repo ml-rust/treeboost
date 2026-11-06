@@ -1,6 +1,17 @@
 # Python Bindings
 
-The Python bindings build from source. They expose `GBDTConfig` and `GBDTModel` through the `treeboost` module.
+The Python bindings build from source. The `treeboost` module exposes:
+
+| Area | Classes |
+| ---- | ------- |
+| Models | `GBDTConfig`, `GBDTModel`, `MonotonicConstraint` |
+| Tuning | `AutoTuner`, `TunerConfig`, `ParameterSpace`, `ParamBounds`, `TuningMode`, `OptimizationMetric`, `TaskType`, `ModelFormat`, `GridStrategy`, `EvalStrategy`, `TrialResult`, `SearchHistory` |
+| Data | `DatasetLoader`, `BinnedDataset`, `FeatureInfo`, `FeatureType`, `DataPipeline`, `PipelineConfig`, `PipelineState`, `HoldoutSplit`, `KFoldSplit` |
+| Encoding | `OrderedTargetEncoder`, `EncodingMap`, `CountMinSketch`, `CategoryFilter`, `CategoryMapping` |
+| Losses | `MseLoss`, `PseudoHuberLoss`, `BinaryLogLoss`, `MultiClassLogLoss` |
+| Prediction | `Prediction`, `ConformalPredictor` |
+
+`AutoModel` and `UniversalModel` are Rust only.
 
 ## Build
 
