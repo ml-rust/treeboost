@@ -60,6 +60,11 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    # Debug info fills the runner disk when the test binaries link.
+    env:
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
     strategy:
       fail-fast: false
       matrix:
