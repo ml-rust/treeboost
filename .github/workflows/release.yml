@@ -1,0 +1,139 @@
+# Manual distribution workflow. Push a v* tag first. `Release Prepare` checks the
+# tag and runs the full suite. Then run this workflow with that tag.
+#
+# Stages:
+#   publish_crate   -> crates.io: treeboost
+#   github_release  -> GitHub Release, with the changelog section as the body
+#
+# Each stage is idempotent and selectable alone. The publish stage skips a version
+# already on crates.io. The release stage overwrites the release in place. After an
+# error, re-dispatch with only the stage that errored on.
+#
+# Required secret: CARGO_REGISTRY_TOKEN, readable from environment `crates-io`.
+
+name: Release
+run-name: Release ${{ inputs.tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish, e.g. v0.1.1"
+        required: true
+        type: string
+      publish_crate:
+        description: "Publish treeboost to crates.io"
+        type: boolean
+        default: true
+      github_release:
+        description: "Create the GitHub Release"
+        type: boolean
+        default: true
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Always runs, so the dispatched tag gets the same check as the prepare run.
+  validate-version:
+    uses: ./.github/workflows/release-validate.yml
+    with:
+      ref: ${{ inputs.tag }}
+
+  # ── crates.io ───────────────────────────────────────────────────────────────
+  publish-crate:
+    name: Publish to crates.io
+    needs: validate-version
+    if: inputs.publish_crate
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+
+      - name: Set version from tag
+        run: bash scripts/ci/stamp_version.sh "${{ needs.validate-version.outputs.version }}"
+
+      # A verifying publish builds the packaged tarball, which catches a file
+      # missing from the package. A version already on crates.io is skipped.
+      - name: Publish treeboost
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(cargo metadata --no-deps --format-version=1 \
+            | jq -r '.packages[] | select(.name == "treeboost") | .version')
+
+          is_published() {
+            curl -sf \
+              -H "User-Agent: treeboost-ci (github.com/ml-rust/treeboost)" \
+              "https://crates.io/api/v1/crates/$1/$2" > /dev/null 2>&1
+          }
+
+          # --allow-dirty: stamp_version.sh edits the manifest for a prerelease
+          # tag. The verifying publish still runs.
+          if is_published treeboost "$VERSION"; then
+            echo "treeboost@$VERSION already published, skipping"
+          else
+            echo "Publishing treeboost@$VERSION..."
+            cargo publish --allow-dirty
+          fi
+
+  # ── GitHub Release ──────────────────────────────────────────────────────────
+  # Independent of publish-crate: a crates.io outage does not block the release.
+  github-release:
+    name: Create GitHub Release
+    needs: validate-version
+    if: inputs.github_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      # The changelog is the release notes. `validate-version` already checks that
+      # this section exists and is non-empty.
+      - name: Build release notes from the changelog
+        env:
+          TAG: ${{ inputs.tag }}
+          BASE: ${{ needs.validate-version.outputs.base_version }}
+        run: |
+          set -euo pipefail
+          # `-l` is required: `git tag` with a pattern and no list flag is the
+          # create form, which errors and drops the compare link.
+          PREVIOUS_TAG=$(git tag -l --sort=-v:refname 'v*' | grep -v "^${TAG}$" | head -n 1 || true)
+
+          bash scripts/ci/changelog_section.sh "$BASE" /tmp/changelog-section.md
+
+          {
+            cat /tmp/changelog-section.md
+            echo
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "**Full diff:** https://github.com/ml-rust/treeboost/compare/${PREVIOUS_TAG}...${TAG}"
+            else
+              echo "**Tree:** https://github.com/ml-rust/treeboost/tree/${TAG}"
+            fi
+          } > /tmp/release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: treeboost ${{ needs.validate-version.outputs.version }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: ${{ needs.validate-version.outputs.is_full_release != 'true' }}

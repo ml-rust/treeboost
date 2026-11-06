@@ -1,0 +1,26 @@
+# CI: thin wrapper over the reusable test workflow.
+#
+# Runs on each pull request and on manual dispatch. The draft guard skips draft
+# pull requests only. release-prepare.yml calls test.yml directly.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    name: Test Suite
+    uses: ./.github/workflows/test.yml

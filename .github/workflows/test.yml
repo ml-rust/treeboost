@@ -1,0 +1,82 @@
+# Reusable test workflow: lint, format, docs, cross-platform tests.
+#
+# Called by:
+#   - ci.yml              (PR checks and manual dispatch)
+#   - release-prepare.yml (tag gate)
+#
+# Runs through `workflow_call` only.
+
+name: Test
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Lint, Format & Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: lint
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Run clippy (default features)
+        run: cargo clippy --all-targets -- -D warnings
+
+      # `cuda` stays out: cudarc reads the toolkit version at build time, and
+      # runners have no CUDA toolkit.
+      - name: Run clippy (CI-safe features)
+        run: cargo clippy --all-targets --features python,gpu,mmap -- -D warnings
+
+      - name: Build docs
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --no-deps
+
+      - name: Run doctests
+        run: cargo test --doc
+
+      - name: Shellcheck release scripts
+        run: shellcheck scripts/ci/*.sh
+
+  # `python` stays out: pyo3's `extension-module` leaves test binaries unlinked.
+  # `gpu` stays out: runners have no GPU adapter.
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: test
+
+      - name: Run tests (default)
+        run: cargo test
+
+      - name: Run tests (mmap)
+        run: cargo test --features mmap
